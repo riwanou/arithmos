@@ -31,7 +31,11 @@ func TestEqual(t *testing.T) {
 	assert.Equal(t, key1.Eq(key2), true)
 
 	key1 = lib.NewKeyInt(30, 100)
-	key2 = lib.NewKeyInt(20, 300)
+	key2 = lib.NewKeyInt(20, 100)
+	assert.Equal(t, key1.Eq(key2), false)
+
+	key1 = lib.NewKeyInt(10, 100)
+	key2 = lib.NewKeyInt(10, 300)
 	assert.Equal(t, key1.Eq(key2), false)
 }
 
