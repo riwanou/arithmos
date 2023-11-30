@@ -1,15 +1,13 @@
 package lib
 
-import (
-	"KeyInt"
-)
+import ()
 
 type MinHeapArray struct {
-	var array []KeyInt
+	array []KeyInt
 }
 
 func (heap *MinHeapArray) SupprMin() KeyInt {
-
+	panic(("unimplemented"))
 }
 
 func (heap *MinHeapArray) Ajout(key KeyInt) {
