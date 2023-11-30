@@ -39,6 +39,16 @@ func TestEqual(t *testing.T) {
 	assert.Equal(t, key1.Eq(key2), false)
 }
 
+func TestString(t *testing.T) {
+	var key *lib.KeyInt
+
+	key = lib.NewKeyInt(102, 10)
+	assert.Equal(t, "102-10", key.String())
+
+	key = lib.NewKeyInt(0, 0)
+	assert.Equal(t, "0-0", key.String())
+}
+
 func TestDataset1Keys1000(t *testing.T) {
 	f, err := os.Open("../data/cles_alea/jeu_1_nb_cles_1000.txt")
 	assert.NoError(t, err)

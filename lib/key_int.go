@@ -41,3 +41,7 @@ func (key *KeyInt) Inf(other *KeyInt) bool {
 func (key *KeyInt) Eq(other *KeyInt) bool {
 	return key.u1 == other.u1 && key.u2 == other.u2
 }
+
+func (key *KeyInt) String() string {
+	return fmt.Sprintf("%v-%v", key.u1, key.u2)
+}
