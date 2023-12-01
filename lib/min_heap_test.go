@@ -39,31 +39,37 @@ func runTestHeaps(test func(lib.MinHeap)) {
 	}
 }
 
-func TestAjout(t *testing.T) {
+func TestAjoutAscending(t *testing.T) {
 	runTestHeaps(func(heap lib.MinHeap) {
 		keys := genKeys()
-
 		assert.Equal(t, "[]", heap.String())
-
 		heap.Ajout(keys[0])
 		assert.Equal(t, "[0-10]", heap.String())
-		vizHeap(heap, "heap-1")
-
 		heap.Ajout(keys[1])
 		assert.Equal(t, "[0-10, 0-20]", heap.String())
-		vizHeap(heap, "heap-2")
-
 		heap.Ajout(keys[2])
 		assert.Equal(t, "[0-10, 0-20, 0-30]", heap.String())
-		vizHeap(heap, "heap-3")
-
 		heap.Ajout(keys[4])
 		assert.Equal(t, "[0-10, 0-20, 0-30, 0-50]", heap.String())
-		vizHeap(heap, "heap-4")
-
 		heap.Ajout(keys[3])
 		assert.Equal(t, "[0-10, 0-20, 0-30, 0-50, 0-40]", heap.String())
-		vizHeap(heap, "heap-5")
+	})
+}
+
+func TestAjoutDescending(t *testing.T) {
+	runTestHeaps(func(heap lib.MinHeap) {
+		keys := genKeys()
+		assert.Equal(t, "[]", heap.String())
+		heap.Ajout(keys[4])
+		assert.Equal(t, "[0-50]", heap.String())
+		heap.Ajout(keys[3])
+		assert.Equal(t, "[0-40, 0-50]", heap.String())
+		heap.Ajout(keys[2])
+		assert.Equal(t, "[0-30, 0-50, 0-40]", heap.String())
+		heap.Ajout(keys[0])
+		assert.Equal(t, "[0-10, 0-30, 0-40, 0-50]", heap.String())
+		heap.Ajout(keys[1])
+		assert.Equal(t, "[0-10, 0-20, 0-40, 0-50, 0-30]", heap.String())
 	})
 }
 
@@ -80,13 +86,13 @@ func TestSupprMin(t *testing.T) {
 	runTestHeaps(func(heap lib.MinHeap) {
 		keys := genKeys()
 		heap.Ajout(keys[0])
-		assert.Equal(t, keys[0], heap.SupprMin())
+		assert.Equal(t, &keys[0], heap.SupprMin())
 	})
 }
 
 func TestSupprMinEmpty(t *testing.T) {
 	runTestHeaps(func(heap lib.MinHeap) {
-		assert.Equal(t, nil, heap.SupprMin())
+		assert.Nil(t, heap.SupprMin())
 	})
 }
 
@@ -98,16 +104,21 @@ func TestSupprMultiple(t *testing.T) {
 		heap.Ajout(keys[2])
 		heap.Ajout(keys[1])
 		heap.Ajout(keys[0])
-		assert.Equal(t, keys[0], heap.SupprMin())
-		assert.Equal(t, keys[1], heap.SupprMin())
-		assert.Equal(t, keys[2], heap.SupprMin())
-		assert.Equal(t, keys[3], heap.SupprMin())
-		assert.Equal(t, keys[4], heap.SupprMin())
-		assert.Equal(t, nil, heap.SupprMin())
+		vizHeap(heap, "heap-1")
+		assert.Equal(t, &keys[0], heap.SupprMin())
+		vizHeap(heap, "heap-2")
+		assert.Equal(t, &keys[1], heap.SupprMin())
+		vizHeap(heap, "heap-3")
+		assert.Equal(t, &keys[2], heap.SupprMin())
+		vizHeap(heap, "heap-4")
+		assert.Equal(t, &keys[3], heap.SupprMin())
+		vizHeap(heap, "heap-5")
+		assert.Equal(t, &keys[4], heap.SupprMin())
+		assert.Nil(t, heap.SupprMin())
 		heap.Ajout(keys[0])
 		heap.Ajout(keys[1])
-		assert.Equal(t, keys[0], heap.SupprMin())
-		assert.Equal(t, keys[1], heap.SupprMin())
-		assert.Equal(t, nil, heap.SupprMin())
+		assert.Equal(t, &keys[0], heap.SupprMin())
+		assert.Equal(t, &keys[1], heap.SupprMin())
+		assert.Nil(t, heap.SupprMin())
 	})
 }
