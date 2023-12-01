@@ -5,4 +5,5 @@ type MinHeap interface {
 	Ajout(key KeyInt)
 	AjoutsIteratif(keys []KeyInt)
 	String() string
+	Viz() []byte
 }

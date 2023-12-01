@@ -1,5 +1,7 @@
 package lib
 
+import "fmt"
+
 type MinHeapNode struct {
 	data  *KeyInt
 	left  *MinHeapNode
@@ -31,7 +33,6 @@ func (heap *MinHeapTree) levelOrder(nodeOp func(*MinHeapNode) bool) {
 		if node.left != nil {
 			queue = append(queue, node.left)
 		}
-
 		if node.right != nil {
 			queue = append(queue, node.right)
 		}
@@ -56,8 +57,31 @@ func (heap *MinHeapTree) String() string {
 	return text
 }
 
+func (heap *MinHeapTree) Viz() []byte {
+	text := "digraph structs {\n"
+
+	heap.levelOrder(func(node *MinHeapNode) bool {
+		if node.data != nil {
+			curr := node.data.String()
+			text += fmt.Sprintf("\"%s\"; \n", curr)
+			if node.left != nil && node.left.data != nil {
+				text += fmt.Sprintf("\"%s\" -> \"%s\";\n",
+					curr, node.left.data.String())
+			}
+			if node.right != nil && node.right.data != nil {
+				text += fmt.Sprintf("\"%s\" -> \"%s\";\n",
+					curr, node.right.data.String())
+			}
+		}
+		return true
+	})
+
+	text += "}"
+	return []byte(text)
+}
+
 func (heap *MinHeapTree) Ajout(key KeyInt) {
-	if heap.root == nil {
+	if heap.root.data == nil {
 		heap.root.data = &key
 		return
 	}
