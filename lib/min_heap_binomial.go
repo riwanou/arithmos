@@ -24,11 +24,7 @@ func NewBinomialTree(data *KeyInt) *BinomialTree {
 	}
 }
 
-func (tree *BinomialTree) Union(other *BinomialTree) {
-	if tree.order != other.order {
-		panic("Failed to merge binomial trees, they must have the same order")
-	}
-
+func (tree *BinomialTree) addSubtree(other *BinomialTree) {
 	if tree.order == 0 {
 		tree.order = 1
 	} else {
@@ -38,14 +34,30 @@ func (tree *BinomialTree) Union(other *BinomialTree) {
 	tree.children = append(tree.children, other)
 }
 
+func BinoTreeUnion(lhs *BinomialTree, rhs *BinomialTree) *BinomialTree {
+	if lhs.data.Inf(rhs.data) {
+		lhs.addSubtree(rhs)
+		return lhs
+	} else {
+		rhs.addSubtree(lhs)
+		return rhs
+	}
+}
+
 /**
 * Binomial Queue
  */
 
-type MinHeapBinomial struct{}
+type MinHeapBinomial struct {
+	trees []*MinHeapTree
+}
 
 func NewMinHeapBinomial() *MinHeapBinomial {
 	return &MinHeapBinomial{}
+}
+
+func (*MinHeapBinomial) Ajout(key *KeyInt) {
+
 }
 
 /**
