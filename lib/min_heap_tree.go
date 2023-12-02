@@ -1,6 +1,8 @@
 package lib
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type MinHeapNode struct {
 	data   *KeyInt
@@ -59,21 +61,21 @@ func (*MinHeapTree) bubbleUpNode(node *MinHeapNode) {
 	}
 }
 
-func (heap *MinHeapTree) Ajout(key KeyInt) {
+func (heap *MinHeapTree) Ajout(key *KeyInt) {
 	if heap.root.isNil() {
-		heap.root.data = &key
+		heap.root.data = key
 		return
 	}
 
 	var insertedNode *MinHeapNode
 	heap.levelOrder(func(node *MinHeapNode) bool {
 		if node.left.isNil() {
-			node.left = &MinHeapNode{data: &key, parent: node}
+			node.left = &MinHeapNode{data: key, parent: node}
 			insertedNode = node.left
 			return false
 		}
 		if node.right.isNil() {
-			node.right = &MinHeapNode{data: &key, parent: node}
+			node.right = &MinHeapNode{data: key, parent: node}
 			insertedNode = node.right
 			return false
 		}
@@ -87,8 +89,7 @@ func (heap *MinHeapTree) Ajout(key KeyInt) {
 	heap.bubbleUpNode(insertedNode)
 }
 
-// TODO: use an implementation with better complexity
-func (heap *MinHeapTree) AjoutsIteratif(keys []KeyInt) {
+func (heap *MinHeapTree) AjoutIteratif(keys []*KeyInt) {
 	for _, key := range keys {
 		heap.Ajout(key)
 	}

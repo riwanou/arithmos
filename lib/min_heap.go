@@ -2,8 +2,8 @@ package lib
 
 type MinHeap interface {
 	SupprMin() *KeyInt
-	Ajout(key KeyInt)
-	AjoutsIteratif(keys []KeyInt)
+	Ajout(key *KeyInt)
+	AjoutIteratif(keys []*KeyInt)
 	String() string
 	Viz() []byte
 }
