@@ -36,7 +36,7 @@ def gen_plot(df, name_patterns, col_names, filename):
     plt.savefig(filename, dpi=300) 
 
 # get data from bench file
-df = pd.read_table("bench_bin_tree", header=None, 
+df = pd.read_table("bench/bench_bin_tree", header=None, 
                    names=["Name", "Iteration", "Time"])
 df = df.drop('Iteration', axis=1)
 
