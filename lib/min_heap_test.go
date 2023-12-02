@@ -53,7 +53,7 @@ func getKeysFromFile(path string) []*lib.KeyInt {
 	}
 	defer f.Close()
 
-	var keys []*lib.KeyInt
+	keys := make([]*lib.KeyInt, 0, 80000)
 	s := bufio.NewScanner(f)
 	for s.Scan() {
 		keyInt, err := lib.NewKeyIntFromString(s.Text())
@@ -170,11 +170,6 @@ func benchmarkHeaps(
 		"jeu_3_nb_cles_200000.txt",
 		"jeu_4_nb_cles_200000.txt",
 		"jeu_5_nb_cles_200000.txt",
-		"jeu_1_nb_cles_120000.txt",
-		"jeu_2_nb_cles_120000.txt",
-		"jeu_3_nb_cles_120000.txt",
-		"jeu_4_nb_cles_120000.txt",
-		"jeu_5_nb_cles_120000.txt",
 	}
 
 	for _, entry := range dirEntries {
