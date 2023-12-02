@@ -127,6 +127,10 @@ func (heap *MinHeapTree) SupprMin() *KeyInt {
 	return data
 }
 
+/**
+* Vizualisation
+ */
+
 func (heap *MinHeapTree) String() string {
 	text := "["
 	last := ""

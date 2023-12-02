@@ -13,16 +13,20 @@ import (
 	"golang.org/x/exp/slices"
 )
 
-func vizHeap(heap lib.MinHeap, filename string) {
+func vizBytes(data []byte, filename string) {
 	DirPath := "../test-output/"
 	_ = os.Mkdir(DirPath, 0755)
 	path := DirPath + filename
 	cmd := exec.Command("dot", "-Tpng", "-Gdpi=300", "-o", path+".png")
-	cmd.Stdin = bytes.NewReader(heap.Viz())
+	cmd.Stdin = bytes.NewReader(data)
 	err := cmd.Run()
 	if err != nil {
 		panic(err)
 	}
+}
+
+func vizHeap(heap lib.MinHeap, filename string) {
+	vizBytes(heap.Viz(), filename)
 }
 
 func genKeys() []*lib.KeyInt {
@@ -62,47 +66,9 @@ func getKeysFromFile(path string) []*lib.KeyInt {
 	return keys
 }
 
-func benchmarkHeaps(
-	b *testing.B,
-	bench func(heap lib.MinHeap, keys []*lib.KeyInt),
-) {
-	debug.SetGCPercent(800)
-	dirName := "../data/cles_alea/"
-	dirEntries, err := os.ReadDir(dirName)
-	if err != nil {
-		panic(err)
-	}
-
-	ignore := []string{
-		"jeu_1_nb_cles_200000.txt",
-		"jeu_2_nb_cles_200000.txt",
-		"jeu_3_nb_cles_200000.txt",
-		"jeu_4_nb_cles_200000.txt",
-		"jeu_5_nb_cles_200000.txt",
-		"jeu_1_nb_cles_120000.txt",
-		"jeu_2_nb_cles_120000.txt",
-		"jeu_3_nb_cles_120000.txt",
-		"jeu_4_nb_cles_120000.txt",
-		"jeu_5_nb_cles_120000.txt",
-	}
-
-	for _, entry := range dirEntries {
-		if !slices.Contains(ignore, entry.Name()) {
-			b.Run("heapTree/"+entry.Name(), func(b *testing.B) {
-				keys := getKeysFromFile(dirName + entry.Name())
-				for n := 0; n < b.N; n++ {
-					bench(lib.NewMinHeapTree(), keys)
-				}
-			})
-		}
-	}
-}
-
-func BenchmarkAjout(b *testing.B) {
-	benchmarkHeaps(b, func(heap lib.MinHeap, keys []*lib.KeyInt) {
-		heap.AjoutIteratif(keys)
-	})
-}
+/**
+ * Tests
+ */
 
 func TestAjoutAscending(t *testing.T) {
 	runTestHeaps(func(heap lib.MinHeap) {
@@ -169,15 +135,10 @@ func TestSupprMultiple(t *testing.T) {
 		heap.Ajout(keys[2])
 		heap.Ajout(keys[1])
 		heap.Ajout(keys[0])
-		vizHeap(heap, "heap-1")
 		assert.Equal(t, keys[0], heap.SupprMin())
-		vizHeap(heap, "heap-2")
 		assert.Equal(t, keys[1], heap.SupprMin())
-		vizHeap(heap, "heap-3")
 		assert.Equal(t, keys[2], heap.SupprMin())
-		vizHeap(heap, "heap-4")
 		assert.Equal(t, keys[3], heap.SupprMin())
-		vizHeap(heap, "heap-5")
 		assert.Equal(t, keys[4], heap.SupprMin())
 		assert.Nil(t, heap.SupprMin())
 		heap.Ajout(keys[0])
@@ -185,5 +146,51 @@ func TestSupprMultiple(t *testing.T) {
 		assert.Equal(t, keys[0], heap.SupprMin())
 		assert.Equal(t, keys[1], heap.SupprMin())
 		assert.Nil(t, heap.SupprMin())
+	})
+}
+
+/**
+ * Benchmarks
+ */
+
+func benchmarkHeaps(
+	b *testing.B,
+	bench func(heap lib.MinHeap, keys []*lib.KeyInt),
+) {
+	debug.SetGCPercent(800)
+	dirName := "../data/cles_alea/"
+	dirEntries, err := os.ReadDir(dirName)
+	if err != nil {
+		panic(err)
+	}
+
+	ignore := []string{
+		"jeu_1_nb_cles_200000.txt",
+		"jeu_2_nb_cles_200000.txt",
+		"jeu_3_nb_cles_200000.txt",
+		"jeu_4_nb_cles_200000.txt",
+		"jeu_5_nb_cles_200000.txt",
+		"jeu_1_nb_cles_120000.txt",
+		"jeu_2_nb_cles_120000.txt",
+		"jeu_3_nb_cles_120000.txt",
+		"jeu_4_nb_cles_120000.txt",
+		"jeu_5_nb_cles_120000.txt",
+	}
+
+	for _, entry := range dirEntries {
+		if !slices.Contains(ignore, entry.Name()) {
+			b.Run("heapTree/"+entry.Name(), func(b *testing.B) {
+				keys := getKeysFromFile(dirName + entry.Name())
+				for n := 0; n < b.N; n++ {
+					bench(lib.NewMinHeapTree(), keys)
+				}
+			})
+		}
+	}
+}
+
+func BenchmarkAjout(b *testing.B) {
+	benchmarkHeaps(b, func(heap lib.MinHeap, keys []*lib.KeyInt) {
+		heap.AjoutIteratif(keys)
 	})
 }
