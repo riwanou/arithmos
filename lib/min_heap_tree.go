@@ -17,17 +17,19 @@ func (node *MinHeapNode) isNil() bool {
 
 type MinHeapTree struct {
 	root *MinHeapNode
+	size uint32
 }
 
 func NewMinHeapTree() *MinHeapTree {
 	return &MinHeapTree{
 		root: &MinHeapNode{},
+		size: 0,
 	}
 }
 
 // Stop the level order search if nodeOp return false
 func (heap *MinHeapTree) levelOrder(nodeOp func(*MinHeapNode) bool) {
-	queue := make([]*MinHeapNode, 0)
+	queue := make([]*MinHeapNode, 0, heap.size)
 	if !heap.root.isNil() {
 		queue = append(queue, heap.root)
 	}
@@ -64,6 +66,7 @@ func (*MinHeapTree) bubbleUpNode(node *MinHeapNode) {
 func (heap *MinHeapTree) Ajout(key *KeyInt) {
 	if heap.root.isNil() {
 		heap.root.data = key
+		heap.size += 1
 		return
 	}
 
@@ -87,6 +90,7 @@ func (heap *MinHeapTree) Ajout(key *KeyInt) {
 	}
 
 	heap.bubbleUpNode(insertedNode)
+	heap.size += 1
 }
 
 func (heap *MinHeapTree) AjoutIteratif(keys []*KeyInt) {
@@ -123,6 +127,7 @@ func (heap *MinHeapTree) SupprMin() *KeyInt {
 	last.data = nil
 
 	heap.sinkNode(heap.root)
+	heap.size -= 1
 
 	return data
 }
