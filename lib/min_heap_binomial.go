@@ -2,8 +2,11 @@ package lib
 
 import (
 	"bytes"
+	"cmp"
+	"math"
 
 	"github.com/bradleyjkemp/memviz"
+	"golang.org/x/exp/slices"
 )
 
 /**
@@ -24,13 +27,15 @@ func NewBinomialTree(data *KeyInt) *BinomialTree {
 	}
 }
 
-func (tree *BinomialTree) addSubtree(other *BinomialTree) {
-	if tree.order == 0 {
-		tree.order = 1
-	} else {
-		tree.order += other.order
+func max(a, b uint32) uint32 {
+	if a > b {
+		return a
 	}
+	return b
+}
 
+func (tree *BinomialTree) addSubtree(other *BinomialTree) {
+	tree.order = max(other.order, tree.order) + 1
 	tree.children = append(tree.children, other)
 }
 
@@ -49,19 +54,76 @@ func BinoTreeUnion(lhs *BinomialTree, rhs *BinomialTree) *BinomialTree {
  */
 
 type MinHeapBinomial struct {
-	trees []*MinHeapTree
+	trees []*BinomialTree
+	size  uint32
 }
 
 func NewMinHeapBinomial() *MinHeapBinomial {
-	return &MinHeapBinomial{}
+	return &MinHeapBinomial{
+		trees: make([]*BinomialTree, 0),
+		size:  0,
+	}
 }
 
-func (*MinHeapBinomial) Ajout(key *KeyInt) {
+func (heap *MinHeapBinomial) Merge(other *MinHeapBinomial) {
+	trees := append(heap.trees, other.trees...)
+	slices.SortFunc(trees, func(a, b *BinomialTree) int {
+		return cmp.Compare(a.order, b.order)
+	})
 
+	heap.size += other.size
+	maxOrder := int(math.Log2(float64(heap.size))) + 1
+	merged := make([]*BinomialTree, maxOrder)
+
+	for _, tree := range trees {
+		order := tree.order
+		for merged[order] != nil {
+			tree = BinoTreeUnion(tree, merged[order])
+			merged[order] = nil
+			order += 1
+		}
+		merged[order] = tree
+	}
+
+	heap.trees = make([]*BinomialTree, 0, len(trees))
+	for _, tree := range merged {
+		if tree != nil {
+			heap.trees = append(heap.trees, tree)
+		}
+	}
+}
+
+func (heap *MinHeapBinomial) Ajout(key *KeyInt) {
+	addHeap := NewMinHeapBinomial()
+	addHeap.trees = append(addHeap.trees, NewBinomialTree(key))
+	addHeap.size += 1
+	heap.Merge(addHeap)
 }
 
 /**
-* Vizualisation
+ * Heap Vizualisation
+ */
+
+func (heap *MinHeapBinomial) String() string {
+	text := "["
+	for i, tree := range heap.trees {
+		text += tree.String()
+		if i < len(heap.trees)-1 {
+			text += ", "
+		}
+	}
+	text += "]"
+	return text
+}
+
+func (heap *MinHeapBinomial) Viz() []byte {
+	buf := &bytes.Buffer{}
+	memviz.Map(buf, heap)
+	return buf.Bytes()
+}
+
+/**
+ * Tree Vizualisation
  */
 
 func (tree *BinomialTree) String() string {
