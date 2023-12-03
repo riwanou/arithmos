@@ -39,8 +39,11 @@ func genKeys() []*lib.KeyInt {
 	}
 }
 
-func runTestHeaps(test func(lib.MinHeap)) {
+func runTestHeaps(test func(lib.MinHeap), withBinomial bool) {
 	heaps := []lib.MinHeap{lib.NewMinHeapTree()}
+	if withBinomial {
+		heaps = append(heaps, lib.NewMinHeapBinomial())
+	}
 	for _, heap := range heaps {
 		test(heap)
 	}
@@ -84,7 +87,7 @@ func TestAjoutAscending(t *testing.T) {
 		assert.Equal(t, "[0-10, 0-20, 0-30, 0-50]", heap.String())
 		heap.Ajout(keys[3])
 		assert.Equal(t, "[0-10, 0-20, 0-30, 0-50, 0-40]", heap.String())
-	})
+	}, false)
 }
 
 func TestAjoutDescending(t *testing.T) {
@@ -101,7 +104,7 @@ func TestAjoutDescending(t *testing.T) {
 		assert.Equal(t, "[0-10, 0-30, 0-40, 0-50]", heap.String())
 		heap.Ajout(keys[1])
 		assert.Equal(t, "[0-10, 0-20, 0-40, 0-50, 0-30]", heap.String())
-	})
+	}, false)
 }
 
 func TestAjoutIteratif(t *testing.T) {
@@ -110,7 +113,7 @@ func TestAjoutIteratif(t *testing.T) {
 		assert.Equal(t, "[]", heap.String())
 		heap.AjoutIteratif(keys)
 		assert.Equal(t, "[0-10, 0-20, 0-30, 0-40, 0-50]", heap.String())
-	})
+	}, false)
 }
 
 func TestSupprMin(t *testing.T) {
@@ -118,13 +121,13 @@ func TestSupprMin(t *testing.T) {
 		keys := genKeys()
 		heap.Ajout(keys[0])
 		assert.Equal(t, keys[0], heap.SupprMin())
-	})
+	}, true)
 }
 
 func TestSupprMinEmpty(t *testing.T) {
 	runTestHeaps(func(heap lib.MinHeap) {
 		assert.Nil(t, heap.SupprMin())
-	})
+	}, true)
 }
 
 func TestSupprMultiple(t *testing.T) {
@@ -146,7 +149,7 @@ func TestSupprMultiple(t *testing.T) {
 		assert.Equal(t, keys[0], heap.SupprMin())
 		assert.Equal(t, keys[1], heap.SupprMin())
 		assert.Nil(t, heap.SupprMin())
-	})
+	}, true)
 }
 
 /**
@@ -156,6 +159,8 @@ func TestSupprMultiple(t *testing.T) {
 func benchmarkHeaps(
 	b *testing.B,
 	bench func(heap lib.MinHeap, keys []*lib.KeyInt),
+	withBinomial bool,
+	ignoreFiles []string,
 ) {
 	debug.SetGCPercent(800)
 	dirName := "../data/cles_alea/"
@@ -164,28 +169,39 @@ func benchmarkHeaps(
 		panic(err)
 	}
 
-	ignore := []string{
+	for _, entry := range dirEntries {
+		if !slices.Contains(ignoreFiles, entry.Name()) {
+			keys := getKeysFromFile(dirName + entry.Name())
+			b.Run("heapTree/"+entry.Name(), func(b *testing.B) {
+				for n := 0; n < b.N; n++ {
+					bench(lib.NewMinHeapTree(), keys)
+				}
+			})
+			if withBinomial {
+				b.Run("heapBinomial/"+entry.Name(), func(b *testing.B) {
+					for n := 0; n < b.N; n++ {
+						bench(lib.NewMinHeapBinomial(), keys)
+					}
+				})
+			}
+		}
+	}
+}
+
+func BenchmarkAjoutIteratif(b *testing.B) {
+	benchmarkHeaps(b, func(heap lib.MinHeap, keys []*lib.KeyInt) {
+		heap.AjoutIteratif(keys)
+	}, false, []string{
 		"jeu_1_nb_cles_200000.txt",
 		"jeu_2_nb_cles_200000.txt",
 		"jeu_3_nb_cles_200000.txt",
 		"jeu_4_nb_cles_200000.txt",
 		"jeu_5_nb_cles_200000.txt",
-	}
-
-	for _, entry := range dirEntries {
-		if !slices.Contains(ignore, entry.Name()) {
-			b.Run("heapTree/"+entry.Name(), func(b *testing.B) {
-				keys := getKeysFromFile(dirName + entry.Name())
-				for n := 0; n < b.N; n++ {
-					bench(lib.NewMinHeapTree(), keys)
-				}
-			})
-		}
-	}
+	})
 }
 
-func BenchmarkAjout(b *testing.B) {
+func BenchmarkConstruction(b *testing.B) {
 	benchmarkHeaps(b, func(heap lib.MinHeap, keys []*lib.KeyInt) {
-		heap.AjoutIteratif(keys)
-	})
+		heap.Construction(keys)
+	}, true, []string{})
 }

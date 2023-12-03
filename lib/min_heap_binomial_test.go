@@ -12,15 +12,15 @@ func TestBinomialTreeUnion(t *testing.T) {
 
 	tree := lib.NewBinomialTree(keys[3])
 	assert.Equal(t, "(0-40)", tree.String())
-	tree = lib.BinoTreeUnion(tree, lib.NewBinomialTree(keys[2]))
+	tree = lib.BinomialTreeUnion(tree, lib.NewBinomialTree(keys[2]))
 	assert.Equal(t, "(0-30, (0-40))", tree.String())
 
 	second_tree := lib.NewBinomialTree(keys[1])
 	assert.Equal(t, "(0-20)", second_tree.String())
-	second_tree = lib.BinoTreeUnion(second_tree, lib.NewBinomialTree(keys[0]))
+	second_tree = lib.BinomialTreeUnion(second_tree, lib.NewBinomialTree(keys[0]))
 	assert.Equal(t, "(0-10, (0-20))", second_tree.String())
 
-	tree = lib.BinoTreeUnion(tree, second_tree)
+	tree = lib.BinomialTreeUnion(tree, second_tree)
 	assert.Equal(t, "(0-10, (0-20), (0-30, (0-40)))", tree.String())
 	vizBytes(tree.Viz(), "binom_tree")
 }
@@ -58,7 +58,14 @@ func TestBinomialAjout(t *testing.T) {
 		heap.String())
 }
 
-func TestBinomialMerge(t *testing.T) {
+func TestBinomialContruction(t *testing.T) {
+	keys := genKeys()
+	heap := lib.NewMinHeapBinomial()
+	heap.Construction(keys)
+	assert.Equal(t, "[(0-50), (0-10, (0-20), (0-30, (0-40)))]", heap.String())
+}
+
+func TestBinomialUnion(t *testing.T) {
 	keys := append(genKeys())
 
 	heaps1 := lib.NewMinHeapBinomial()
@@ -74,18 +81,17 @@ func TestBinomialMerge(t *testing.T) {
 	heaps4 := lib.NewMinHeapBinomial()
 	heaps4.Ajout(keys[4])
 
-	heaps3.Merge(heaps4)
+	heaps3.Union(heaps4)
 	heaps3_1 := lib.NewMinHeapBinomial()
 	heaps3_1.Ajout(lib.NewKeyInt(0, 100))
-	heaps3.Merge(heaps3_1)
+	heaps3.Union(heaps3_1)
 	assert.Equal(t, "[(0-100), (0-40, (0-50))]", heaps3.String())
 	vizBytes(heaps3.Viz(), "binomial_heap_merge")
 
-	heaps1.Merge(heaps2)
+	heaps1.Union(heaps2)
 	assert.Equal(t, "[(0-30), (0-10, (0-20))]", heaps1.String())
 
-	heaps1.Merge(heaps3)
+	heaps1.Union(heaps3)
 	assert.Equal(t, "[(0-40, (0-50)), (0-10, (0-20), (0-30, (0-100)))]",
 		heaps1.String())
-
 }

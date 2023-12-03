@@ -30,18 +30,22 @@ def gen_plot(df, name_patterns, col_names, filename):
         avg_df = avg_keys_bench(extracted_df, col_names[i])
         data_frames.append(avg_df)
 
+    plt.clf()
     final_df = pd.concat(data_frames)
     ax = sns.lineplot(x='Value', y='Time', hue='Name', data=final_df)
     ax.set(xlabel="nombre de clés", ylabel="Temps (ms)")
     plt.savefig(filename, dpi=300) 
 
-# get data from bench file
-df = pd.read_table("bench/bench_bin_tree", header=None, 
+# Ajout
+df = pd.read_table("bench/bench_ajout_tree", header=None, 
                    names=["Name", "Iteration", "Time"])
-df = df.drop('Iteration', axis=1)
-
-# plt.savefig("plots/heap_ajout_iteratif") 
 gen_plot(df, ['Ajout/heapTree'], ['min heap tree'], 
          'plots/heap_ajout_iteratif')
+
+# Construction
+df = pd.read_table("bench/bench_construction_binomial", header=None, 
+                   names=["Name", "Iteration", "Time"])
+gen_plot(df, ['Construction/heapBinomial'], ['min heap binomial'], 
+         'plots/heap_construction')
 
 

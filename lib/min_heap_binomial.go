@@ -39,7 +39,7 @@ func (tree *BinomialTree) addSubtree(other *BinomialTree) {
 	tree.children = append(tree.children, other)
 }
 
-func BinoTreeUnion(lhs *BinomialTree, rhs *BinomialTree) *BinomialTree {
+func BinomialTreeUnion(lhs *BinomialTree, rhs *BinomialTree) *BinomialTree {
 	if lhs.data.Inf(rhs.data) {
 		lhs.addSubtree(rhs)
 		return lhs
@@ -55,7 +55,7 @@ func BinoTreeUnion(lhs *BinomialTree, rhs *BinomialTree) *BinomialTree {
 
 type MinHeapBinomial struct {
 	trees []*BinomialTree
-	size  uint32
+	size  int
 }
 
 func NewMinHeapBinomial() *MinHeapBinomial {
@@ -65,7 +65,7 @@ func NewMinHeapBinomial() *MinHeapBinomial {
 	}
 }
 
-func (heap *MinHeapBinomial) Merge(other *MinHeapBinomial) {
+func (heap *MinHeapBinomial) Union(other *MinHeapBinomial) {
 	trees := append(heap.trees, other.trees...)
 	slices.SortFunc(trees, func(a, b *BinomialTree) int {
 		return cmp.Compare(a.order, b.order)
@@ -78,7 +78,7 @@ func (heap *MinHeapBinomial) Merge(other *MinHeapBinomial) {
 	for _, tree := range trees {
 		order := tree.order
 		for merged[order] != nil {
-			tree = BinoTreeUnion(tree, merged[order])
+			tree = BinomialTreeUnion(tree, merged[order])
 			merged[order] = nil
 			order += 1
 		}
@@ -97,7 +97,45 @@ func (heap *MinHeapBinomial) Ajout(key *KeyInt) {
 	addHeap := NewMinHeapBinomial()
 	addHeap.trees = append(addHeap.trees, NewBinomialTree(key))
 	addHeap.size += 1
-	heap.Merge(addHeap)
+	heap.Union(addHeap)
+}
+
+func (heap *MinHeapBinomial) SupprMin() *KeyInt {
+	if len(heap.trees) == 0 {
+		return nil
+	}
+
+	// remove min tree from binomial heap list
+	minTree := heap.trees[0]
+	minTreeIndex := 0
+	for i, tree := range heap.trees[1:] {
+		if tree.data.Inf(minTree.data) {
+			minTree = tree
+			minTreeIndex = i
+		}
+	}
+	heap.trees = append(heap.trees[:minTreeIndex],
+		heap.trees[minTreeIndex+1:]...)
+
+	// merge the children of the min tree into the heap list
+	minKey := minTree.data
+	childrenHeap := NewMinHeapBinomial()
+	childrenHeap.trees = minTree.children
+	childrenHeap.size = len(minTree.children)
+	heap.Union(childrenHeap)
+
+	return minKey
+}
+
+// not needed for binomial min heap
+func (heap *MinHeapBinomial) AjoutIteratif(keys []*KeyInt) {
+	panic("unimplemented")
+}
+
+func (heap *MinHeapBinomial) Construction(keys []*KeyInt) {
+	for _, key := range keys {
+		heap.Ajout(key)
+	}
 }
 
 /**
