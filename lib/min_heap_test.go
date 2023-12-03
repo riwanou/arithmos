@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"runtime/debug"
+	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -219,4 +220,37 @@ func BenchmarkConstruction(b *testing.B) {
 	benchmarkHeaps(b, func(heap lib.MinHeap, keys []*lib.KeyInt) {
 		heap.Construction(keys)
 	}, true, []string{})
+}
+
+/**
+ * Union benchmarks
+ */
+
+func BenchmarkUnion(b *testing.B) {
+	dataSizes := []int{1000, 5000, 20000, 50000, 80000, 120000, 200000}
+
+	for _, dataSize := range dataSizes {
+		keysGroups := make([][]*lib.KeyInt, 0, 5)
+		for keysData := 1; keysData <= 5; keysData++ {
+			path := keysDirName + "jeu_" + strconv.Itoa(keysData) +
+				"_nb_cles_" + strconv.Itoa(dataSize) + ".txt"
+			keysGroups = append(keysGroups, getKeysFromFile(path))
+		}
+
+		name := "cles_" + strconv.Itoa(dataSize)
+
+		b.Run("heapBinomial/"+name+"/10", func(b *testing.B) {
+			heaps := make([]*lib.MinHeapBinomial, 0, len(keysGroups))
+			for _, keys := range keysGroups {
+				heap := lib.NewMinHeapBinomial()
+				heap.Construction(keys)
+				heaps = append(heaps, heap)
+			}
+			b.ResetTimer()
+			heap := lib.NewMinHeapBinomial()
+			for _, mergeHeap := range heaps {
+				heap.Union(mergeHeap)
+			}
+		})
+	}
 }
