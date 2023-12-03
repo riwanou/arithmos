@@ -13,6 +13,8 @@ import (
 	"golang.org/x/exp/slices"
 )
 
+const keysDirName = "../data/cles_alea/"
+
 func vizBytes(data []byte, filename string) {
 	DirPath := "../test-output/"
 	_ = os.Mkdir(DirPath, 0755)
@@ -121,7 +123,8 @@ func TestSupprMin(t *testing.T) {
 		keys := genKeys()
 		heap.Ajout(keys[0])
 		assert.Equal(t, keys[0], heap.SupprMin())
-	}, true)
+		assert.Nil(t, heap.SupprMin())
+	}, false)
 }
 
 func TestSupprMinEmpty(t *testing.T) {
@@ -149,7 +152,20 @@ func TestSupprMultiple(t *testing.T) {
 		assert.Equal(t, keys[0], heap.SupprMin())
 		assert.Equal(t, keys[1], heap.SupprMin())
 		assert.Nil(t, heap.SupprMin())
-	}, true)
+	}, false)
+}
+
+func TestSupprFile(t *testing.T) {
+	keys := getKeysFromFile(keysDirName + "jeu_1_nb_cles_1000.txt")
+	heapTree := lib.NewMinHeapTree()
+	heapTree.AjoutIteratif(keys)
+
+	heapBinomial := lib.NewMinHeapBinomial()
+	heapBinomial.Construction(keys)
+
+	for i := 0; i < len(keys); i++ {
+		assert.Equal(t, heapTree.SupprMin(), heapBinomial.SupprMin())
+	}
 }
 
 /**
@@ -163,15 +179,14 @@ func benchmarkHeaps(
 	ignoreFiles []string,
 ) {
 	debug.SetGCPercent(800)
-	dirName := "../data/cles_alea/"
-	dirEntries, err := os.ReadDir(dirName)
+	dirEntries, err := os.ReadDir(keysDirName)
 	if err != nil {
 		panic(err)
 	}
 
 	for _, entry := range dirEntries {
 		if !slices.Contains(ignoreFiles, entry.Name()) {
-			keys := getKeysFromFile(dirName + entry.Name())
+			keys := getKeysFromFile(keysDirName + entry.Name())
 			b.Run("heapTree/"+entry.Name(), func(b *testing.B) {
 				for n := 0; n < b.N; n++ {
 					bench(lib.NewMinHeapTree(), keys)

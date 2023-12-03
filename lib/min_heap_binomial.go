@@ -6,6 +6,7 @@ import (
 	"math"
 
 	"github.com/bradleyjkemp/memviz"
+	"golang.org/x/exp/constraints"
 	"golang.org/x/exp/slices"
 )
 
@@ -17,6 +18,7 @@ type BinomialTree struct {
 	order    uint32
 	data     *KeyInt
 	children []*BinomialTree
+	size     uint32
 }
 
 func NewBinomialTree(data *KeyInt) *BinomialTree {
@@ -24,10 +26,11 @@ func NewBinomialTree(data *KeyInt) *BinomialTree {
 		order:    0,
 		data:     data,
 		children: make([]*BinomialTree, 0),
+		size:     1,
 	}
 }
 
-func max(a, b uint32) uint32 {
+func max[T constraints.Ordered](a, b T) T {
 	if a > b {
 		return a
 	}
@@ -37,6 +40,7 @@ func max(a, b uint32) uint32 {
 func (tree *BinomialTree) addSubtree(other *BinomialTree) {
 	tree.order = max(other.order, tree.order) + 1
 	tree.children = append(tree.children, other)
+	tree.size += other.size
 }
 
 func BinomialTreeUnion(lhs *BinomialTree, rhs *BinomialTree) *BinomialTree {
@@ -55,13 +59,24 @@ func BinomialTreeUnion(lhs *BinomialTree, rhs *BinomialTree) *BinomialTree {
 
 type MinHeapBinomial struct {
 	trees []*BinomialTree
-	size  int
+	size  uint32
 }
 
 func NewMinHeapBinomial() *MinHeapBinomial {
 	return &MinHeapBinomial{
 		trees: make([]*BinomialTree, 0),
 		size:  0,
+	}
+}
+
+func NewMinHeapBinomialFromTrees(trees []*BinomialTree) *MinHeapBinomial {
+	var size uint32 = 0
+	for _, tree := range trees {
+		size += tree.size
+	}
+	return &MinHeapBinomial{
+		trees: trees,
+		size:  size,
 	}
 }
 
@@ -72,7 +87,8 @@ func (heap *MinHeapBinomial) Union(other *MinHeapBinomial) {
 	})
 
 	heap.size += other.size
-	maxOrder := int(math.Log2(float64(heap.size))) + 1
+	maxOrder := int(math.Ceil(math.Log2(float64(heap.size)))) + 1
+	maxOrder = max(maxOrder, 0)
 	merged := make([]*BinomialTree, maxOrder)
 
 	for _, tree := range trees {
@@ -94,21 +110,22 @@ func (heap *MinHeapBinomial) Union(other *MinHeapBinomial) {
 }
 
 func (heap *MinHeapBinomial) Ajout(key *KeyInt) {
-	addHeap := NewMinHeapBinomial()
-	addHeap.trees = append(addHeap.trees, NewBinomialTree(key))
-	addHeap.size += 1
-	heap.Union(addHeap)
+	heap.Union(
+		NewMinHeapBinomialFromTrees(
+			[]*BinomialTree{NewBinomialTree(key)},
+		),
+	)
 }
 
 func (heap *MinHeapBinomial) SupprMin() *KeyInt {
-	if len(heap.trees) == 0 {
+	if heap.size == 0 {
 		return nil
 	}
 
 	// remove min tree from binomial heap list
 	minTree := heap.trees[0]
 	minTreeIndex := 0
-	for i, tree := range heap.trees[1:] {
+	for i, tree := range heap.trees {
 		if tree.data.Inf(minTree.data) {
 			minTree = tree
 			minTreeIndex = i
@@ -116,15 +133,12 @@ func (heap *MinHeapBinomial) SupprMin() *KeyInt {
 	}
 	heap.trees = append(heap.trees[:minTreeIndex],
 		heap.trees[minTreeIndex+1:]...)
+	heap.size -= minTree.size
 
 	// merge the children of the min tree into the heap list
-	minKey := minTree.data
-	childrenHeap := NewMinHeapBinomial()
-	childrenHeap.trees = minTree.children
-	childrenHeap.size = len(minTree.children)
-	heap.Union(childrenHeap)
+	heap.Union(NewMinHeapBinomialFromTrees(minTree.children))
 
-	return minKey
+	return minTree.data
 }
 
 // not needed for binomial min heap

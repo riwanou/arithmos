@@ -17,7 +17,7 @@ func (node *MinHeapNode) isNil() bool {
 
 type MinHeapTree struct {
 	root *MinHeapNode
-	size uint32
+	size int
 }
 
 func NewMinHeapTree() *MinHeapTree {
@@ -105,12 +105,20 @@ func (heap *MinHeapTree) Construction(keys []*KeyInt) {
 // Swap the given node with one of its smaller children recursivly
 // For example, if we insert a big key at the top, it will lower it to the bottom
 func (heap *MinHeapTree) sinkNode(node *MinHeapNode) {
+	var minNode *MinHeapNode
+
 	if !node.left.isNil() && node.left.data.Inf(node.data) {
-		node.left.data, node.data = node.data, node.left.data
-		heap.sinkNode(node.left)
-	} else if !node.right.isNil() && node.right.data.Inf(node.data) {
-		node.right.data, node.data = node.data, node.right.data
-		heap.sinkNode(node.right)
+		minNode = node.left
+	}
+	if !node.right.isNil() && node.right.data.Inf(node.data) {
+		if minNode == nil || (minNode != nil && node.right.data.Inf(minNode.data)) {
+			minNode = node.right
+		}
+	}
+
+	if minNode != nil {
+		minNode.data, node.data = node.data, minNode.data
+		heap.sinkNode(minNode)
 	}
 }
 
