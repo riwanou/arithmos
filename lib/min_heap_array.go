@@ -41,7 +41,9 @@ func (heap *MinHeapArray) right(i int) KeyInt {
 }
 
 func NewMinHeapArray() *MinHeapArray {
-	panic(("unimplemented"))
+	heap := &MinHeapArray{}
+	heap.array = make([]KeyInt, 0)
+	return heap
 }
 
 func (heap *MinHeapArray) SupprMin() KeyInt {
