@@ -2,6 +2,9 @@ package lib
 
 import (
 	"fmt"
+	"math/bits"
+
+	"golang.org/x/exp/slices"
 )
 
 type MinHeapNode struct {
@@ -17,36 +20,13 @@ func (node *MinHeapNode) isNil() bool {
 
 type MinHeapTree struct {
 	root *MinHeapNode
-	size int
+	size uint32
 }
 
 func NewMinHeapTree() *MinHeapTree {
 	return &MinHeapTree{
 		root: &MinHeapNode{},
 		size: 0,
-	}
-}
-
-// Stop the level order search if nodeOp return false
-func (heap *MinHeapTree) levelOrder(nodeOp func(*MinHeapNode) bool) {
-	queue := make([]*MinHeapNode, 0, heap.size)
-	if !heap.root.isNil() {
-		queue = append(queue, heap.root)
-	}
-	for len(queue) != 0 {
-		node := queue[0]
-		queue = queue[1:]
-
-		if nodeOp(node) == false {
-			return
-		}
-
-		if !node.left.isNil() {
-			queue = append(queue, node.left)
-		}
-		if !node.right.isNil() {
-			queue = append(queue, node.right)
-		}
 	}
 }
 
@@ -63,34 +43,62 @@ func (*MinHeapTree) bubbleUpNode(node *MinHeapNode) {
 	}
 }
 
+// Compute the path to the last node based on the heap size
+func (heap *MinHeapTree) pathToLast() []byte {
+	size := heap.size
+	len := max(bits.Len32(size)-1, 0)
+
+	path := make([]byte, 0, len)
+	for i := 0; i < len; i++ {
+		path = append(path, byte(size&1))
+		size >>= 1
+	}
+	slices.Reverse(path)
+
+	return path
+}
+
+// Return the last node of the binary tree (full)
+func (heap *MinHeapTree) nodeFromPath(path []byte) *MinHeapNode {
+	currNode := heap.root
+	for _, bitValue := range path {
+		if bitValue == 0 {
+			currNode = currNode.left
+		} else {
+			currNode = currNode.right
+		}
+	}
+	return currNode
+}
+
 func (heap *MinHeapTree) Ajout(key *KeyInt) {
+	heap.size += 1
+
 	if heap.root.isNil() {
 		heap.root.data = key
-		heap.size += 1
 		return
 	}
 
+	beforeLastNode := heap.root
+	bitPath := heap.pathToLast()
+	if len(bitPath) > 1 {
+		beforeLastNode = heap.nodeFromPath(bitPath[:len(bitPath)-1])
+	}
+
 	var insertedNode *MinHeapNode
-	heap.levelOrder(func(node *MinHeapNode) bool {
-		if node.left.isNil() {
-			node.left = &MinHeapNode{data: key, parent: node}
-			insertedNode = node.left
-			return false
-		}
-		if node.right.isNil() {
-			node.right = &MinHeapNode{data: key, parent: node}
-			insertedNode = node.right
-			return false
-		}
-		return true
-	})
+	if beforeLastNode.left.isNil() {
+		beforeLastNode.left = &MinHeapNode{data: key, parent: beforeLastNode}
+		insertedNode = beforeLastNode.left
+	} else {
+		beforeLastNode.right = &MinHeapNode{data: key, parent: beforeLastNode}
+		insertedNode = beforeLastNode.right
+	}
 
 	if insertedNode.isNil() {
 		panic("Failed to insert node in min heap tree")
 	}
 
 	heap.bubbleUpNode(insertedNode)
-	heap.size += 1
 }
 
 func (heap *MinHeapTree) AjoutIteratif(keys []*KeyInt) {
@@ -123,11 +131,7 @@ func (heap *MinHeapTree) sinkNode(node *MinHeapNode) {
 }
 
 func (heap *MinHeapTree) SupprMin() *KeyInt {
-	var last *MinHeapNode
-	heap.levelOrder(func(node *MinHeapNode) bool {
-		last = node
-		return true
-	})
+	last := heap.nodeFromPath(heap.pathToLast())
 	if last.isNil() {
 		return nil
 	}
@@ -146,6 +150,29 @@ func (heap *MinHeapTree) SupprMin() *KeyInt {
 /**
 * Vizualisation
  */
+
+// Stop the level order search if nodeOp return false
+func (heap *MinHeapTree) levelOrder(nodeOp func(*MinHeapNode) bool) {
+	queue := make([]*MinHeapNode, 0, heap.size)
+	if !heap.root.isNil() {
+		queue = append(queue, heap.root)
+	}
+	for len(queue) != 0 {
+		node := queue[0]
+		queue = queue[1:]
+
+		if nodeOp(node) == false {
+			return
+		}
+
+		if !node.left.isNil() {
+			queue = append(queue, node.left)
+		}
+		if !node.right.isNil() {
+			queue = append(queue, node.right)
+		}
+	}
+}
 
 func (heap *MinHeapTree) String() string {
 	text := "["
