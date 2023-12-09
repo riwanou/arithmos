@@ -44,12 +44,14 @@ func (tree *BinomialTree) addSubtree(other *BinomialTree) {
 }
 
 func BinomialTreeUnion(lhs *BinomialTree, rhs *BinomialTree) *BinomialTree {
+	lhsCopy := *lhs
+	rhsCopy := *rhs
 	if lhs.data.Inf(rhs.data) {
-		lhs.addSubtree(rhs)
-		return lhs
+		lhsCopy.addSubtree(&rhsCopy)
+		return &lhsCopy
 	} else {
-		rhs.addSubtree(lhs)
-		return rhs
+		rhsCopy.addSubtree(&lhsCopy)
+		return &rhsCopy
 	}
 }
 
@@ -59,13 +61,13 @@ func BinomialTreeUnion(lhs *BinomialTree, rhs *BinomialTree) *BinomialTree {
 
 type MinHeapBinomial struct {
 	trees []*BinomialTree
-	size  uint32
+	Size  uint32
 }
 
 func NewMinHeapBinomial() *MinHeapBinomial {
 	return &MinHeapBinomial{
 		trees: make([]*BinomialTree, 0),
-		size:  0,
+		Size:  0,
 	}
 }
 
@@ -76,18 +78,19 @@ func NewMinHeapBinomialFromTrees(trees []*BinomialTree) *MinHeapBinomial {
 	}
 	return &MinHeapBinomial{
 		trees: trees,
-		size:  size,
+		Size:  size,
 	}
 }
 
 func (heap *MinHeapBinomial) Union(other *MinHeapBinomial) {
-	trees := append(heap.trees, other.trees...)
+	otherCopy := *other
+	trees := append(heap.trees, otherCopy.trees...)
 	slices.SortFunc(trees, func(a, b *BinomialTree) int {
 		return cmp.Compare(a.order, b.order)
 	})
 
-	heap.size += other.size
-	maxOrder := int(math.Ceil(math.Log2(float64(heap.size)))) + 1
+	heap.Size += otherCopy.Size
+	maxOrder := int(math.Ceil(math.Log2(float64(heap.Size)))) + 1
 	maxOrder = max(maxOrder, 0)
 	merged := make([]*BinomialTree, maxOrder)
 
@@ -118,7 +121,7 @@ func (heap *MinHeapBinomial) Ajout(key *KeyInt) {
 }
 
 func (heap *MinHeapBinomial) SupprMin() *KeyInt {
-	if heap.size == 0 {
+	if heap.Size == 0 {
 		return nil
 	}
 
@@ -133,7 +136,7 @@ func (heap *MinHeapBinomial) SupprMin() *KeyInt {
 	}
 	heap.trees = append(heap.trees[:minTreeIndex],
 		heap.trees[minTreeIndex+1:]...)
-	heap.size -= minTree.size
+	heap.Size -= minTree.size
 
 	// merge the children of the min tree into the heap list
 	heap.Union(NewMinHeapBinomialFromTrees(minTree.children))
