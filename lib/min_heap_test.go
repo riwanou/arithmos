@@ -11,7 +11,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"golang.org/x/exp/slices"
 )
 
 const keysDirName = "../data/cles_alea/"
@@ -177,7 +176,6 @@ func benchmarkHeaps(
 	b *testing.B,
 	bench func(heap lib.MinHeap, keys []*lib.KeyInt),
 	withBinomial bool,
-	ignoreFiles []string,
 ) {
 	debug.SetGCPercent(800)
 	dirEntries, err := os.ReadDir(keysDirName)
@@ -186,20 +184,18 @@ func benchmarkHeaps(
 	}
 
 	for _, entry := range dirEntries {
-		if !slices.Contains(ignoreFiles, entry.Name()) {
-			keys := getKeysFromFile(keysDirName + entry.Name())
-			b.Run("heapTree/"+entry.Name(), func(b *testing.B) {
+		keys := getKeysFromFile(keysDirName + entry.Name())
+		b.Run("heapTree/"+entry.Name(), func(b *testing.B) {
+			for n := 0; n < b.N; n++ {
+				bench(lib.NewMinHeapTree(), keys)
+			}
+		})
+		if withBinomial {
+			b.Run("heapBinomial/"+entry.Name(), func(b *testing.B) {
 				for n := 0; n < b.N; n++ {
-					bench(lib.NewMinHeapTree(), keys)
+					bench(lib.NewMinHeapBinomial(), keys)
 				}
 			})
-			if withBinomial {
-				b.Run("heapBinomial/"+entry.Name(), func(b *testing.B) {
-					for n := 0; n < b.N; n++ {
-						bench(lib.NewMinHeapBinomial(), keys)
-					}
-				})
-			}
 		}
 	}
 }
@@ -207,19 +203,13 @@ func benchmarkHeaps(
 func BenchmarkAjoutIteratif(b *testing.B) {
 	benchmarkHeaps(b, func(heap lib.MinHeap, keys []*lib.KeyInt) {
 		heap.AjoutIteratif(keys)
-	}, false, []string{
-		"jeu_1_nb_cles_200000.txt",
-		"jeu_2_nb_cles_200000.txt",
-		"jeu_3_nb_cles_200000.txt",
-		"jeu_4_nb_cles_200000.txt",
-		"jeu_5_nb_cles_200000.txt",
-	})
+	}, false)
 }
 
 func BenchmarkConstruction(b *testing.B) {
 	benchmarkHeaps(b, func(heap lib.MinHeap, keys []*lib.KeyInt) {
 		heap.Construction(keys)
-	}, true, []string{})
+	}, true)
 }
 
 /**
@@ -238,18 +228,18 @@ func BenchmarkUnion(b *testing.B) {
 		}
 
 		name := "cles_" + strconv.Itoa(dataSize)
+		heaps := make([]*lib.MinHeapBinomial, len(keysGroups))
 
-		b.Run("heapBinomial/"+name+"/10", func(b *testing.B) {
-			heaps := make([]*lib.MinHeapBinomial, 0, len(keysGroups))
-			for _, keys := range keysGroups {
-				heap := lib.NewMinHeapBinomial()
-				heap.Construction(keys)
-				heaps = append(heaps, heap)
+		b.Run("heapBinomial/"+name, func(b *testing.B) {
+			for i, keys := range keysGroups {
+				heaps[i] = lib.NewMinHeapBinomial()
+				heaps[i].Construction(keys)
 			}
-			b.ResetTimer()
-			heap := lib.NewMinHeapBinomial()
-			for _, mergeHeap := range heaps {
-				heap.Union(mergeHeap)
+			for n := 0; n < b.N; n++ {
+				binoHeap := lib.NewMinHeapBinomial()
+				for _, heap := range heaps {
+					binoHeap.Union(heap)
+				}
 			}
 		})
 	}
