@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"golang.org/x/exp/slices"
 )
 
 const keysDirName = "../data/cles_alea/"
@@ -71,6 +72,15 @@ func getKeysFromFile(path string) []*lib.KeyInt {
 	return keys
 }
 
+func genAscendingKeys(nbKeys uint64) []*lib.KeyInt {
+	keys := make([]*lib.KeyInt, 0, nbKeys)
+	var i uint64 = 0
+	for ; i < nbKeys; i++ {
+		keys = append(keys, lib.NewKeyInt(0, i))
+	}
+	return keys
+}
+
 /**
  * Tests
  */
@@ -116,6 +126,26 @@ func TestAjoutIteratif(t *testing.T) {
 		heap.AjoutIteratif(keys)
 		assert.Equal(t, "[0-10, 0-20, 0-30, 0-40, 0-50]", heap.String())
 	}, false)
+	runTestHeaps(func(heap lib.MinHeap) {
+		keys := genKeys()
+		slices.Reverse(keys)
+		heap.AjoutIteratif(keys)
+		assert.Equal(t, "[0-10, 0-20, 0-40, 0-50, 0-30]", heap.String())
+	}, false)
+}
+
+func TestConstruction(t *testing.T) {
+	runTestHeaps(func(heap lib.MinHeap) {
+		keys := genKeys()
+		heap.Construction(keys[:0])
+		assert.Equal(t, "[]", heap.String())
+	}, false)
+	runTestHeaps(func(heap lib.MinHeap) {
+		keys := genKeys()
+		assert.Equal(t, "[]", heap.String())
+		heap.Construction(keys)
+		assert.Equal(t, "[0-10, 0-20, 0-30, 0-40, 0-50]", heap.String())
+	}, false)
 }
 
 func TestSupprMin(t *testing.T) {
@@ -152,19 +182,39 @@ func TestSupprMultiple(t *testing.T) {
 		assert.Equal(t, keys[0], heap.SupprMin())
 		assert.Equal(t, keys[1], heap.SupprMin())
 		assert.Nil(t, heap.SupprMin())
-	}, false)
+	}, true)
+	runTestHeaps(func(heap lib.MinHeap) {
+		keys := genKeys()
+		heap.Construction(keys)
+		assert.Equal(t, keys[0], heap.SupprMin())
+		assert.Equal(t, keys[1], heap.SupprMin())
+		assert.Equal(t, keys[2], heap.SupprMin())
+		assert.Equal(t, keys[3], heap.SupprMin())
+		assert.Equal(t, keys[4], heap.SupprMin())
+		assert.Nil(t, heap.SupprMin())
+		heap.Construction(keys[:2])
+		assert.Equal(t, keys[0], heap.SupprMin())
+		assert.Equal(t, keys[1], heap.SupprMin())
+		assert.Nil(t, heap.SupprMin())
+	}, true)
 }
 
 func TestSupprFile(t *testing.T) {
 	keys := getKeysFromFile(keysDirName + "jeu_1_nb_cles_1000.txt")
+
 	heapTree := lib.NewMinHeapTree()
 	heapTree.AjoutIteratif(keys)
+
+	heapTreeCons := lib.NewMinHeapTree()
+	heapTreeCons.Construction(keys)
 
 	heapBinomial := lib.NewMinHeapBinomial()
 	heapBinomial.Construction(keys)
 
 	for i := 0; i < len(keys); i++ {
-		assert.Equal(t, heapTree.SupprMin(), heapBinomial.SupprMin())
+		binoMin := heapBinomial.SupprMin()
+		assert.Equal(t, heapTree.SupprMin(), binoMin)
+		assert.Equal(t, heapTreeCons.SupprMin(), binoMin)
 	}
 }
 
@@ -177,27 +227,41 @@ func benchmarkHeaps(
 	bench func(heap lib.MinHeap, keys []*lib.KeyInt),
 	withBinomial bool,
 ) {
-	debug.SetGCPercent(800)
-	dirEntries, err := os.ReadDir(keysDirName)
-	if err != nil {
-		panic(err)
-	}
-
-	for _, entry := range dirEntries {
-		keys := getKeysFromFile(keysDirName + entry.Name())
-		b.Run("heapTree/"+entry.Name(), func(b *testing.B) {
+	run := func(name string, keys []*lib.KeyInt) {
+		b.Run("heapTree/"+name, func(b *testing.B) {
 			for n := 0; n < b.N; n++ {
 				bench(lib.NewMinHeapTree(), keys)
 			}
 		})
 		if withBinomial {
-			b.Run("heapBinomial/"+entry.Name(), func(b *testing.B) {
+			b.Run("heapBinomial/"+name, func(b *testing.B) {
 				for n := 0; n < b.N; n++ {
 					bench(lib.NewMinHeapBinomial(), keys)
 				}
 			})
 		}
 	}
+
+	debug.SetGCPercent(800)
+	dirEntries, err := os.ReadDir(keysDirName)
+	if err != nil {
+		panic(err)
+	}
+	for _, entry := range dirEntries {
+		keys := getKeysFromFile(keysDirName + entry.Name())
+		run(entry.Name(), keys)
+	}
+
+	withBinomial = false
+	run_extra := func(nbKeys uint64) {
+		keys := genAscendingKeys(nbKeys)
+		run("extra_jeu_nb_cles_"+strconv.FormatUint(nbKeys, 10), keys)
+	}
+
+	run_extra(250000)
+	run_extra(300000)
+	run_extra(500000)
+	run_extra(1000000)
 }
 
 func BenchmarkAjoutIteratif(b *testing.B) {
@@ -217,19 +281,8 @@ func BenchmarkConstruction(b *testing.B) {
  */
 
 func BenchmarkUnion(b *testing.B) {
-	dataSizes := []int{1000, 5000, 20000, 50000, 80000, 120000, 200000}
-
-	for _, dataSize := range dataSizes {
-		keysGroups := make([][]*lib.KeyInt, 0, 5)
-		for keysData := 1; keysData <= 5; keysData++ {
-			path := keysDirName + "jeu_" + strconv.Itoa(keysData) +
-				"_nb_cles_" + strconv.Itoa(dataSize) + ".txt"
-			keysGroups = append(keysGroups, getKeysFromFile(path))
-		}
-
-		name := "cles_" + strconv.Itoa(dataSize)
+	run := func(name string, keysGroups [][]*lib.KeyInt) {
 		heaps := make([]*lib.MinHeapBinomial, len(keysGroups))
-
 		b.Run("heapBinomial/"+name, func(b *testing.B) {
 			for i, keys := range keysGroups {
 				heaps[i] = lib.NewMinHeapBinomial()
@@ -237,10 +290,34 @@ func BenchmarkUnion(b *testing.B) {
 			}
 			for n := 0; n < b.N; n++ {
 				binoHeap := lib.NewMinHeapBinomial()
-				for _, heap := range heaps {
-					binoHeap.Union(heap)
-				}
+				binoHeap.Union(heaps[0])
+				binoHeap.Union(heaps[1])
 			}
 		})
 	}
+
+	dataSizes := []int{1000, 5000, 20000, 50000, 80000, 120000, 200000}
+
+	for _, dataSize := range dataSizes {
+		keysGroups := make([][]*lib.KeyInt, 0, 2)
+		for keysData := 1; keysData <= 2; keysData++ {
+			path := keysDirName + "jeu_" + strconv.Itoa(keysData) +
+				"_nb_cles_" + strconv.Itoa(dataSize) + ".txt"
+			keysGroups = append(keysGroups, getKeysFromFile(path))
+		}
+		name := "cles_" + strconv.Itoa(dataSize)
+		run(name, keysGroups)
+	}
+
+	run_extra := func(nbKeys uint64) {
+		keysGroups := make([][]*lib.KeyInt, 0, 2)
+		for j := 0; j < 2; j++ {
+			keys := genAscendingKeys(nbKeys)
+			keysGroups = append(keysGroups, keys)
+		}
+		run("cles_"+strconv.FormatUint(nbKeys, 10), keysGroups)
+	}
+
+	run_extra(250000)
+	run_extra(300000)
 }

@@ -21,12 +21,14 @@ func (node *MinHeapNode) isNil() bool {
 type MinHeapTree struct {
 	root *MinHeapNode
 	size uint32
+	path []byte
 }
 
 func NewMinHeapTree() *MinHeapTree {
 	return &MinHeapTree{
 		root: &MinHeapNode{},
 		size: 0,
+		path: make([]byte, 0, 25),
 	}
 }
 
@@ -43,19 +45,18 @@ func (*MinHeapTree) bubbleUpNode(node *MinHeapNode) {
 	}
 }
 
-// Compute the path to the last node based on the heap size
-func (heap *MinHeapTree) pathToLast() []byte {
-	size := heap.size
+// Compute the path to the last node based on the size
+func (heap *MinHeapTree) pathTo(size uint32) []byte {
 	len := max(bits.Len32(size)-1, 0)
+	heap.path = heap.path[:0]
 
-	path := make([]byte, 0, len)
 	for i := 0; i < len; i++ {
-		path = append(path, byte(size&1))
+		heap.path = append(heap.path, byte(size&1))
 		size >>= 1
 	}
-	slices.Reverse(path)
+	slices.Reverse(heap.path)
 
-	return path
+	return heap.path
 }
 
 // Return the last node of the binary tree (full)
@@ -71,16 +72,17 @@ func (heap *MinHeapTree) nodeFromPath(path []byte) *MinHeapNode {
 	return currNode
 }
 
-func (heap *MinHeapTree) Ajout(key *KeyInt) {
+// Add node to the tree, keep it full
+func (heap *MinHeapTree) addAtEnd(key *KeyInt) *MinHeapNode {
 	heap.size += 1
 
 	if heap.root.isNil() {
 		heap.root.data = key
-		return
+		return heap.root
 	}
 
 	beforeLastNode := heap.root
-	bitPath := heap.pathToLast()
+	bitPath := heap.pathTo(heap.size)
 	if len(bitPath) > 1 {
 		beforeLastNode = heap.nodeFromPath(bitPath[:len(bitPath)-1])
 	}
@@ -98,6 +100,11 @@ func (heap *MinHeapTree) Ajout(key *KeyInt) {
 		panic("Failed to insert node in min heap tree")
 	}
 
+	return insertedNode
+}
+
+func (heap *MinHeapTree) Ajout(key *KeyInt) {
+	insertedNode := heap.addAtEnd(key)
 	heap.bubbleUpNode(insertedNode)
 }
 
@@ -107,7 +114,23 @@ func (heap *MinHeapTree) AjoutIteratif(keys []*KeyInt) {
 	}
 }
 
+func (heap *MinHeapTree) heapify(node *MinHeapNode) {
+	if node.left != nil && node.left.left != nil {
+		heap.heapify(node.left)
+	}
+	if node.right != nil && node.right.left != nil {
+		heap.heapify(node.right)
+	}
+	heap.sinkNode(node)
+}
+
 func (heap *MinHeapTree) Construction(keys []*KeyInt) {
+	for _, key := range keys {
+		heap.addAtEnd(key)
+	}
+	if heap.size > 0 {
+		heap.heapify(heap.root)
+	}
 }
 
 // Swap the given node with one of its smaller children recursivly
@@ -131,7 +154,7 @@ func (heap *MinHeapTree) sinkNode(node *MinHeapNode) {
 }
 
 func (heap *MinHeapTree) SupprMin() *KeyInt {
-	last := heap.nodeFromPath(heap.pathToLast())
+	last := heap.nodeFromPath(heap.pathTo(heap.size))
 	if last.isNil() {
 		return nil
 	}

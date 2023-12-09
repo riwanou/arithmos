@@ -24,16 +24,24 @@ def avg_keys_bench(df, name):
     keys_data = []
     for i in range(1, 6):
         data = df[df['Name'].str.contains('jeu_' + str(i))].copy()
-        keys_data.append(extract_bench_data(data))
+        if len(data) > 0:
+            keys_data.append(extract_bench_data(data))
+
+    if len(keys_data) == 0:
+        return []
 
     avg_data = keys_data[0]
     for data in keys_data[1:]:
         avg_data['Time'] += data['Time']
     avg_data['Time'] /= 5
 
+    extra_data = df[df['Name'].str.contains('extra_jeu')].copy()
+    if len(extra_data) > 0:
+        avg_data = pd.concat([extract_bench_data(extra_data), avg_data])
+
     avg_data = avg_data.sort_values('Value')
     avg_data['Name'] = name
-    
+
     return avg_data
 
 def gen_plot(df, name_patterns, col_names, filename, avg=True):
@@ -45,7 +53,11 @@ def gen_plot(df, name_patterns, col_names, filename, avg=True):
             avg_df = avg_keys_bench(extracted_df, col_names[i])
         else:
             avg_df = keys_bench(extracted_df, col_names[i])
-        data_frames.append(avg_df)
+        if len(avg_df) > 0:
+            data_frames.append(avg_df)
+
+    if len(data_frames) == 0:
+        return
 
     plt.clf()
     final_df = pd.concat(data_frames)
@@ -56,7 +68,9 @@ def gen_plot(df, name_patterns, col_names, filename, avg=True):
 # Ajout
 df = pd.read_table("bench_output", header=None, 
                    names=["Name", "Iteration", "Time"])
-gen_plot(df, ['AjoutIteratif/heapTree'], ['min heap tree'], 
+gen_plot(df, 
+         ['AjoutIteratif/heapTree', 'Construction/heapTree'], 
+         ['ajout min heap tree', 'construction min heap tree'], 
          'plots/heap_ajout_iteratif')
 
 # Construction
