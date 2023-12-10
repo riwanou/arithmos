@@ -1,6 +1,7 @@
 package lib
 
 import (
+	"encoding/binary"
 	"fmt"
 	"strconv"
 )
@@ -13,6 +14,12 @@ type KeyInt struct {
 
 // Create a key from a low and high 64b unsigned int
 func NewKeyInt(u1 uint64, u2 uint64) *KeyInt {
+	return &KeyInt{u1, u2}
+}
+
+func NewKeyIntFromBytes(bytes [16]byte) *KeyInt {
+	u1 := binary.LittleEndian.Uint64(bytes[0:])
+	u2 := binary.LittleEndian.Uint64(bytes[8:])
 	return &KeyInt{u1, u2}
 }
 
