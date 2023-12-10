@@ -44,7 +44,8 @@ func MD5(data []byte) [16]byte {
 	// append "1" bit to data
 	tmp := [1 + 63 + 8]byte{0x80}
 	// calculate number of padding bytes
-	pad := (55 - len(data)) % 64
+	// +9 (1 bit, 8 bits for the size)
+	pad := (64 - (len(data)+9)%64) % 64
 	// append length in bits
 	binary.LittleEndian.PutUint64(tmp[1+pad:], uint64(len(data))<<3)
 
