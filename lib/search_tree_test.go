@@ -3,10 +3,12 @@ package lib_test
 import (
 	"arithmos/lib"
 	"bufio"
+	"fmt"
 	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"golang.org/x/exp/slices"
 )
 
 func TestGet(t *testing.T) {
@@ -73,4 +75,28 @@ func TestShakespeareUniqueWords(t *testing.T) {
 
 	assert.Equal(t, 23086, len(words))
 	assert.Equal(t, 905534, totalWords)
+}
+
+func TestShakespeareUniqueCollisionWords(t *testing.T) {
+	words := make([]string, 0)
+	wordSet := lib.NewSearchTree()
+	collisionWords := make([]string, 0)
+
+	getShakespeareWords(func(word string) {
+		hash := lib.MD5([]byte(word))
+		key := lib.NewKeyIntFromBytes(hash)
+
+		// not already here
+		if wordSet.Get(key) == nil {
+			wordSet.Insert(key)
+			words = append(words, word)
+		} else {
+			// collision on the key, check if the words already exist
+			if !slices.Contains(words, word) {
+				collisionWords = append(collisionWords, word)
+			}
+		}
+	})
+
+	fmt.Println(len(collisionWords))
 }
