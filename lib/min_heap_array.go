@@ -1,31 +1,27 @@
 package lib
 
 type MinHeapArray struct {
-	array       []KeyInt
-	currentSize int
+	array []KeyInt
 }
 
 /*
 Checks if heap is empty.
 */
 func (heap *MinHeapArray) isEmpty() bool {
-	return heap.currentSize == 0
+	return len(heap.array) == 0
 }
 
 /*
 Checks if an index exists.
 */
 func (heap *MinHeapArray) isExists(i int) bool {
-	return heap.currentSize >= i
+	return i < len(heap.array)
 }
 
 /*
 Checks if an index has children.
 */
-func (heap *MinHeapArray) hasChildren(i int, considerOneChild bool) bool {
-	if considerOneChild {
-		return heap.hasLeftChild(i) || heap.hasRightChild(i)
-	}
+func (heap *MinHeapArray) hasChildren(i int) bool {
 	return heap.hasLeftChild(i) && heap.hasRightChild(i)
 }
 
@@ -51,7 +47,7 @@ func (heap *MinHeapArray) key(i int) KeyInt {
 		panic("Error: Unable to get root key because heap is empty!")
 	}
 
-	if heap.isExists(i) {
+	if !heap.isExists(i) {
 		panic("Error: Unable to get key because index match any existing key!")
 	}
 
@@ -88,17 +84,16 @@ func NewMinHeapArray() *MinHeapArray {
 /*
 SupprMin removes key with the minimum value.
 */
-func (heap *MinHeapArray) SupprMin() KeyInt {
+func (heap *MinHeapArray) SupprMin() *KeyInt {
 	if heap.isEmpty() {
 		panic("Error: Unable to remove minimum because heap is empty!")
 	}
 
 	minKey := heap.array[0]
-	heap.array[0] = heap.array[heap.currentSize-1]
-	heap.currentSize--
+	heap.array[0] = heap.array[len(heap.array)-1]
 	heap.algorithm(0)
 
-	return minKey
+	return &minKey
 }
 
 // algorithm
@@ -123,86 +118,107 @@ func (heap *MinHeapArray) SupprMin() KeyInt {
 //     if heap property is broken:
 //     then swap current node's value and selected child value
 //     sift down the child.
-func (heap *MinHeapArray) algorithm(i int) {
-	// Check if current index has no children
-	if !heap.hasChildren(i, false) {
+func (heap *MinHeapArray) algorithm(keyIndex int) {
+	var childKeyIndex int
+
+	childKeyIndex = heap.siftDown(keyIndex)
+
+	// Check if everything is done
+	if childKeyIndex == -1 {
 		return
 	}
 
-	// Check if current index has one child
-	if heap.hasChildren(i, true) {
-
-		// Check if heap has no broken heap property
-		childIndex, hasBrokenHeapProperty := heap.hasBrokenHeapProperty(i)
-
-		if !hasBrokenHeapProperty {
-			return
-		}
-
-		// Swap current node's value and child value
-		heap.array[i] = heap.key(childIndex)
-		heap.array[childIndex] = heap.key(i)
-
-		heap.algorithm(childIndex)
-	}
-
-	// Check if current index has two children
-	if heap.hasChildren(i, false) {
-
-		leftKeyIndex := heap.left(i)
-		leftKeyValue := heap.key(leftKeyIndex)
-		rightKeyIndex := heap.right(i)
-		rightKeyValue := heap.key(rightKeyIndex)
-
-		if leftKeyValue.Inf(&rightKeyValue) {
-			heap.array[i] = heap.key(leftKeyIndex)
-			heap.array[leftKeyIndex] = heap.key(i)
-		} else {
-			heap.array[i] = heap.key(rightKeyIndex)
-			heap.array[rightKeyIndex] = heap.key(i)
-		}
-	}
-
+	heap.algorithm(childKeyIndex)
 }
 
-func (heap *MinHeapArray) hasBrokenHeapProperty(i int) (int, bool) {
-	currentKey := heap.key(i)
+func (heap *MinHeapArray) siftDown(keyIndex int) int {
+	var key KeyInt
+	var leftOrRightKeyIndex int
+	var leftOrRightKey KeyInt
 
-	if heap.hasLeftChild(i) {
-		leftKeyIndex := heap.left(i)
-		leftKey := heap.key(leftKeyIndex)
+	key = heap.key(keyIndex)
 
-		if leftKey.Inf(&currentKey) || leftKey.Eq(&currentKey) {
-			return leftKeyIndex, true
-		}
+	if heap.hasLeftChild(keyIndex) {
+		leftOrRightKeyIndex = heap.left(keyIndex)
 	}
 
-	if heap.hasRightChild(i) {
-		rightKeyIndex := heap.right(i)
-		rightKey := heap.key(rightKeyIndex)
-
-		if rightKey.Inf(&currentKey) || rightKey.Eq(&currentKey) {
-			return rightKeyIndex, true
-		}
+	if heap.hasRightChild(keyIndex) {
+		leftOrRightKeyIndex = heap.right(keyIndex)
 	}
 
-	return -1, false
+	leftOrRightKey = heap.key(leftOrRightKeyIndex)
+
+	if leftOrRightKey.Inf(&key) {
+		heap.array[keyIndex], heap.array[leftOrRightKeyIndex] = leftOrRightKey, key
+		return leftOrRightKeyIndex
+	}
+
+	return -1
 }
 
-func (heap *MinHeapArray) Ajout(key KeyInt) {
-	panic(("unimplemented"))
+/*
+Ajout
+
+Add a new element to the end of an array;
+
+ 1. Sift up the new element, while heap property is broken.
+ 2. Sifting is done as following: compare node's value with parent's value.
+    If they are in wrong order, swap them.
+*/
+func (heap *MinHeapArray) Ajout(key *KeyInt) {
+	heap.array = append(heap.array, *key)
+	heap.siftUp(len(heap.array) - 1)
 }
 
-func (heap *MinHeapArray) AjoutsIteratifs(keys []KeyInt) {
-	panic(("unimplemented"))
+func (heap *MinHeapArray) siftUp(keyIndex int) {
+	if keyIndex == 0 {
+		return
+	}
+
+	key := heap.key(keyIndex)
+	parentKeyIndex := heap.parent(keyIndex)
+	parentKey := heap.key(parentKeyIndex)
+
+	// Check if property is broken
+	if key.Inf(&parentKey) {
+		// Swap key and key's parent
+		heap.array[keyIndex], heap.array[parentKeyIndex] = heap.key(parentKeyIndex), heap.key(keyIndex)
+
+		heap.siftUp(parentKeyIndex)
+	}
+}
+
+func (heap *MinHeapArray) AjoutIteratif(keys []*KeyInt) {
+	for _, key := range keys {
+		heap.Ajout(key)
+	}
 }
 
 func (heap *MinHeapArray) Construction(keys []*KeyInt) {
-	panic(("unimplemented"))
+	// Add every key to array
+	for _, key := range keys {
+		heap.array = append(heap.array, *key)
+	}
+
+	// Sift down every tree
+	for i := 1; i < len(heap.array)/2; i++ {
+		heap.siftDown(i)
+	}
 }
 
 func (heap *MinHeapArray) String() string {
-	panic(("unimplemented"))
+	text := "["
+	last := ""
+
+	for _, key := range heap.array {
+		if last != "" {
+			text += last + ", "
+		}
+		last = key.String()
+	}
+
+	text += last + "]"
+	return text
 }
 
 func (heap *MinHeapArray) Viz() []byte {

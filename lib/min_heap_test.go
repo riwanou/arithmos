@@ -43,7 +43,7 @@ func genKeys() []*lib.KeyInt {
 }
 
 func runTestHeaps(test func(lib.MinHeap), withBinomial bool) {
-	heaps := []lib.MinHeap{lib.NewMinHeapTree()}
+	heaps := []lib.MinHeap{lib.NewMinHeapTree(), lib.NewMinHeapArray()}
 	if withBinomial {
 		heaps = append(heaps, lib.NewMinHeapBinomial())
 	}
