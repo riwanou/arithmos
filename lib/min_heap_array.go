@@ -85,50 +85,26 @@ func NewMinHeapArray() *MinHeapArray {
 SupprMin removes key with the minimum value.
 */
 func (heap *MinHeapArray) SupprMin() *KeyInt {
+	// Check if heap is not empty
 	if heap.isEmpty() {
-		panic("Error: Unable to remove minimum because heap is empty!")
+		return nil
 	}
 
-	minKey := heap.array[0]
-	heap.array[0] = heap.array[len(heap.array)-1]
-	heap.algorithm(0)
+	// Swap the min value in the array to last position in the array
+	heap.array[0], heap.array[len(heap.array)-1] = heap.array[len(heap.array)-1], heap.array[0]
 
-	return &minKey
-}
+	// Store min value
+	minKey := heap.array[len(heap.array)-1]
 
-// algorithm
-//
-//  1. Copy the last value in the array to the root
-//
-//  2. Decrease heap's size by 1
-//
-//  3. Sift down root's value. Sifting is done as following:
-//
-//     - if current node has no children:
-//     sifting is over;
-//
-//     - if current node has one child:
-//
-//     if heap property is broken:
-//     then swap current node's value and child value
-//     sift down the child;
-//
-//     - if current node has two children:
-//     find the smallest of them.
-//     if heap property is broken:
-//     then swap current node's value and selected child value
-//     sift down the child.
-func (heap *MinHeapArray) algorithm(keyIndex int) {
-	var childKeyIndex int
+	// Remove last element
+	heap.array = heap.array[0 : len(heap.array)-1]
 
-	childKeyIndex = heap.siftDown(keyIndex)
-
-	// Check if everything is done
-	if childKeyIndex == -1 {
-		return
+	keyIndex := heap.siftDown(0)
+	if keyIndex == -1 {
+		return &minKey
 	}
 
-	heap.algorithm(childKeyIndex)
+	return nil
 }
 
 func (heap *MinHeapArray) siftDown(keyIndex int) int {
@@ -136,21 +112,35 @@ func (heap *MinHeapArray) siftDown(keyIndex int) int {
 	var leftOrRightKeyIndex int
 	var leftOrRightKey KeyInt
 
+	if heap.isEmpty() {
+		return -1
+	}
+
 	key = heap.key(keyIndex)
 
 	if heap.hasLeftChild(keyIndex) {
 		leftOrRightKeyIndex = heap.left(keyIndex)
-	}
+		leftOrRightKey = heap.key(leftOrRightKeyIndex)
 
-	if heap.hasRightChild(keyIndex) {
-		leftOrRightKeyIndex = heap.right(keyIndex)
-	}
+		// Check if there is a right child and if it is smaller than the left child
+		if heap.hasRightChild(keyIndex) {
+			rightKeyIndex := heap.right(keyIndex)
+			rightKey := heap.key(rightKeyIndex)
 
-	leftOrRightKey = heap.key(leftOrRightKeyIndex)
+			if rightKey.Inf(&leftOrRightKey) {
+				leftOrRightKeyIndex = rightKeyIndex
+				leftOrRightKey = rightKey
+			}
+		}
 
-	if leftOrRightKey.Inf(&key) {
-		heap.array[keyIndex], heap.array[leftOrRightKeyIndex] = leftOrRightKey, key
-		return leftOrRightKeyIndex
+		// Compare the smaller of the two children with the parent
+		if leftOrRightKey.Inf(&key) {
+			heap.array[keyIndex], heap.array[leftOrRightKeyIndex] = leftOrRightKey, key
+
+			// println("after sift down=" + heap.String())
+
+			return heap.siftDown(leftOrRightKeyIndex)
+		}
 	}
 
 	return -1
@@ -201,7 +191,7 @@ func (heap *MinHeapArray) Construction(keys []*KeyInt) {
 	}
 
 	// Sift down every tree
-	for i := 1; i < len(heap.array)/2; i++ {
+	for i := len(heap.array) / 2; i >= 0; i-- {
 		heap.siftDown(i)
 	}
 }

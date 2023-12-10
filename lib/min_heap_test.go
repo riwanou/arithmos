@@ -202,6 +202,16 @@ func TestSupprMultiple(t *testing.T) {
 func TestSupprFile(t *testing.T) {
 	keys := getKeysFromFile(keysDirName + "jeu_1_nb_cles_1000.txt")
 
+	heapArray := lib.NewMinHeapArray()
+	heapArray.AjoutIteratif(keys)
+
+	// fmt.Println("heapArray=", heapArray)
+
+	heapArrayCons := lib.NewMinHeapArray()
+	heapArrayCons.Construction(keys)
+
+	// fmt.Println("heapArrayCons=", heapArrayCons)
+
 	heapTree := lib.NewMinHeapTree()
 	heapTree.AjoutIteratif(keys)
 
@@ -213,6 +223,8 @@ func TestSupprFile(t *testing.T) {
 
 	for i := 0; i < len(keys); i++ {
 		binoMin := heapBinomial.SupprMin()
+		assert.Equal(t, heapArray.SupprMin(), binoMin)
+		assert.Equal(t, heapArrayCons.SupprMin(), binoMin)
 		assert.Equal(t, heapTree.SupprMin(), binoMin)
 		assert.Equal(t, heapTreeCons.SupprMin(), binoMin)
 	}
