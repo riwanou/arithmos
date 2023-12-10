@@ -205,12 +205,8 @@ func TestSupprFile(t *testing.T) {
 	heapArray := lib.NewMinHeapArray()
 	heapArray.AjoutIteratif(keys)
 
-	// fmt.Println("heapArray=", heapArray)
-
 	heapArrayCons := lib.NewMinHeapArray()
 	heapArrayCons.Construction(keys)
-
-	// fmt.Println("heapArrayCons=", heapArrayCons)
 
 	heapTree := lib.NewMinHeapTree()
 	heapTree.AjoutIteratif(keys)
