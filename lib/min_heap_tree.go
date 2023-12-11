@@ -133,6 +133,38 @@ func (heap *MinHeapTree) Construction(keys []*KeyInt) {
 	}
 }
 
+/**
+ * Union
+ */
+
+func (heap *MinHeapTree) getKeysNode(node *MinHeapNode) []*KeyInt {
+	keys := make([]*KeyInt, 0)
+	if node.data != nil {
+		keys = append(keys, node.data)
+	}
+	if !node.left.isNil() {
+		keys = append(keys, heap.getKeysNode(node.left)...)
+	}
+	if !node.right.isNil() {
+		keys = append(keys, heap.getKeysNode(node.right)...)
+	}
+	return keys
+}
+
+func (heap *MinHeapTree) getKeys() []*KeyInt {
+	return heap.getKeysNode(heap.root)
+}
+
+func HeapTreeUnion(lhs *MinHeapTree, rhs *MinHeapTree) *MinHeapTree {
+	keys := lhs.getKeys()
+	keys = append(keys, rhs.getKeys()...)
+
+	heap := NewMinHeapTree()
+	heap.Construction(keys)
+
+	return heap
+}
+
 // Swap the given node with one of its smaller children recursivly
 // For example, if we insert a big key at the top, it will lower it to the bottom
 func (heap *MinHeapTree) sinkNode(node *MinHeapNode) {

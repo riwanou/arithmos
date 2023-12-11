@@ -148,6 +148,18 @@ func TestConstruction(t *testing.T) {
 	}, false)
 }
 
+func TestUnion(t *testing.T) {
+	keys := genKeys()
+
+	heap1 := lib.NewMinHeapTree()
+	heap1.Construction(keys[:2])
+	heap2 := lib.NewMinHeapTree()
+	heap2.Construction(keys[2:])
+
+	heap := lib.HeapTreeUnion(heap1, heap2)
+	assert.Equal(t, "[0-10, 0-20, 0-30, 0-40, 0-50]", heap.String())
+}
+
 func TestSupprMin(t *testing.T) {
 	runTestHeaps(func(heap lib.MinHeap) {
 		keys := genKeys()
@@ -211,8 +223,11 @@ func TestSupprFile(t *testing.T) {
 	heapTree := lib.NewMinHeapTree()
 	heapTree.AjoutIteratif(keys)
 
-	heapTreeCons := lib.NewMinHeapTree()
-	heapTreeCons.Construction(keys)
+	heapTreeCons1 := lib.NewMinHeapTree()
+	heapTreeCons2 := lib.NewMinHeapTree()
+	heapTreeCons1.Construction(keys[500:])
+	heapTreeCons2.Construction(keys[:500])
+	heapTreeCons := lib.HeapTreeUnion(heapTreeCons1, heapTreeCons2)
 
 	heapBinomial := lib.NewMinHeapBinomial()
 	heapBinomial.Construction(keys)
