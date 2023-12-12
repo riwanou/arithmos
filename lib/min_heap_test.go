@@ -354,21 +354,22 @@ func BenchmarkUnion(b *testing.B) {
 
 	for _, dataSize := range dataSizes {
 		keysGroups := make([][]*lib.KeyInt, 0, 2)
-		for keysData := 1; keysData <= 2; keysData++ {
-			path := keysDirName + "jeu_" + strconv.Itoa(keysData) +
-				"_nb_cles_" + strconv.Itoa(dataSize) + ".txt"
-			keysGroups = append(keysGroups, getKeysFromFile(path))
-		}
+		path := keysDirName + "jeu_1" + "_nb_cles_" +
+			strconv.Itoa(dataSize) + ".txt"
+		keys := getKeysFromFile(path)
+
+		keysGroups = append(keysGroups, keys[dataSize/2:])
+		keysGroups = append(keysGroups, keys[:dataSize/2])
+
 		name := "cles_" + strconv.Itoa(dataSize)
 		run(name, keysGroups)
 	}
 
 	run_extra := func(nbKeys uint64) {
 		keysGroups := make([][]*lib.KeyInt, 0, 2)
-		for j := 0; j < 2; j++ {
-			keys := genDescendingKeys(nbKeys)
-			keysGroups = append(keysGroups, keys)
-		}
+		keys := genDescendingKeys(nbKeys)
+		keysGroups = append(keysGroups, keys[nbKeys/2:])
+		keysGroups = append(keysGroups, keys[:nbKeys/2])
 		run("cles_"+strconv.FormatUint(nbKeys, 10), keysGroups)
 	}
 
