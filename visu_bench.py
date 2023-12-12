@@ -44,7 +44,7 @@ def avg_keys_bench(df, name):
 
     return avg_data
 
-def gen_plot(df, name_patterns, col_names, filename, avg=True):
+def get_dataframes(df, name_patterns, col_names, filename, avg=True):
     data_frames = []
     for i in range(0, len(name_patterns)):
         extracted_df = df[df['Name'].str.contains(name_patterns[i])]
@@ -55,7 +55,10 @@ def gen_plot(df, name_patterns, col_names, filename, avg=True):
             avg_df = keys_bench(extracted_df, col_names[i])
         if len(avg_df) > 0:
             data_frames.append(avg_df)
+    return data_frames
 
+def gen_plot(df, name_patterns, col_names, filename, avg=True):
+    data_frames = get_dataframes(df, name_patterns, col_names, filename, avg)
     if len(data_frames) == 0:
         return
 
@@ -65,23 +68,71 @@ def gen_plot(df, name_patterns, col_names, filename, avg=True):
     ax.set(xlabel="nombre de clés", ylabel="Temps (ms)")
     plt.savefig(filename, dpi=300) 
 
-# Ajout
+def gen_bar_plot(df, name_patterns, col_names, filename, avg=True):
+    data_frames = get_dataframes(df, name_patterns, col_names, filename, avg)
+    if len(data_frames) == 0:
+        return
+
+    plt.clf()
+    final_df = pd.concat(data_frames)
+    ax = sns.barplot(x="Value", y="Time", hue='Name', data=final_df, gap=0.05)
+    ax.set(xlabel="nombre de clés", ylabel="Temps (ms)")
+    plt.savefig(filename, dpi=300) 
+
+
 df = pd.read_table("bench_output", header=None, 
                    names=["Name", "Iteration", "Time"])
+
+# Heaps ajout tree
+# gen_plot(df, 
+#          ['AjoutIteratif/heapTree', 'Construction/heapTree'], 
+#          ['ajout min heap tree', 'construction min heap tree'], 
+#          'plots/ajout_tree')
+
+# # Heaps ajout array
 gen_plot(df, 
-         ['AjoutIteratif/heapTree', 'Construction/heapTree'], 
-         ['ajout min heap tree', 'construction min heap tree'], 
-         'plots/heap_ajout_iteratif')
+         ['AjoutIteratif/heapArray', 'Construction/heapArray'], 
+         ['ajout min heap array', 'construction min heap array'], 
+         'plots/ajout_array')
 
-# Construction
-df = pd.read_table("bench_output", header=None, 
-                   names=["Name", "Iteration", "Time"])
-gen_plot(df, ['Construction/heapBinomial'], ['min heap binomial'], 
-         'plots/heap_construction')
+# # Heaps Construction
+# gen_plot(df, 
+#          ['Construction/heapBinomial', 'Construction/heapTree', 'Construction/heapArray'], 
+#          ['min heap binomial', 'min heap tree', 'min heap array'], 
+#          'plots/construction')
 
-# Union
-df = pd.read_table("bench_output", header=None, 
-                   names=["Name", "Iteration", "Time"])
-gen_plot(df, ['Union/heapBinomial'], ['min heap binomial'], 
-         'plots/heap_union', avg=False)
+# # Heaps Union
+# gen_plot(df, 
+#          ['Union/heapBinomial', 'Union/heapTree', 'Union/heapArray'], 
+#          ['min heap binomial', 'min heap tree', 'min heap array'], 
+#          'plots/heap_union', avg=False)
+
+# # Shakespeare
+
+# # Ajout
+# gen_bar_plot(df, 
+#          ['AjoutWords/heapBinomial', 'AjoutWords/heapTree', 'AjoutWords/heapArray'], 
+#          ['min heap binomial', 'min heap tree', 'min heap array'], 
+#          'plots/words_ajout', avg=False)
+
+# # Construction
+# gen_bar_plot(df, 
+#          ['ConstructionWords/heapBinomial', 'ConstructionWords/heapTree', 
+#              'ConstructionWords/heapArray'], 
+#          ['min heap binomial', 'min heap tree', 'min heap array'], 
+#          'plots/words_construction', avg=False)
+
+# # SupprMin
+# gen_bar_plot(df, 
+#          ['SupprMinWords/heapBinomial', 'SupprMinWords/heapTree', 
+#              'SupprMinWords/heapArray'], 
+#          ['min heap binomial', 'min heap tree', 'min heap array'], 
+#          'plots/words_supprmin', avg=False)
+
+# # SupprMin
+# gen_bar_plot(df, 
+#          ['UnionWords/heapBinomial', 'UnionWords/heapTree', 
+#              'UnionWords/heapArray'], 
+#          ['min heap binomial', 'min heap tree', 'min heap array'], 
+#          'plots/words_union', avg=False)
 

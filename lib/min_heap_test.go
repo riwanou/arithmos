@@ -72,10 +72,10 @@ func getKeysFromFile(path string) []*lib.KeyInt {
 	return keys
 }
 
-func genAscendingKeys(nbKeys uint64) []*lib.KeyInt {
+func genDescendingKeys(nbKeys uint64) []*lib.KeyInt {
 	keys := make([]*lib.KeyInt, 0, nbKeys)
-	var i uint64 = 0
-	for ; i < nbKeys; i++ {
+	var i uint64 = nbKeys
+	for ; i > 0; i-- {
 		keys = append(keys, lib.NewKeyInt(0, i))
 	}
 	return keys
@@ -217,8 +217,11 @@ func TestSupprFile(t *testing.T) {
 	heapArray := lib.NewMinHeapArray()
 	heapArray.AjoutIteratif(keys)
 
-	heapArrayCons := lib.NewMinHeapArray()
-	heapArrayCons.Construction(keys)
+	heapArrayCons1 := lib.NewMinHeapArray()
+	heapArrayCons2 := lib.NewMinHeapArray()
+	heapArrayCons1.Construction(keys[500:])
+	heapArrayCons2.Construction(keys[:500])
+	heapArrayCons := lib.HeapArrayUnion(heapArrayCons1, heapArrayCons2)
 
 	heapTree := lib.NewMinHeapTree()
 	heapTree.AjoutIteratif(keys)
@@ -256,6 +259,11 @@ func benchmarkHeaps(
 				bench(lib.NewMinHeapTree(), keys)
 			}
 		})
+		b.Run("heapArray/"+name, func(b *testing.B) {
+			for n := 0; n < b.N; n++ {
+				bench(lib.NewMinHeapArray(), keys)
+			}
+		})
 		if withBinomial {
 			b.Run("heapBinomial/"+name, func(b *testing.B) {
 				for n := 0; n < b.N; n++ {
@@ -277,7 +285,7 @@ func benchmarkHeaps(
 
 	withBinomial = false
 	run_extra := func(nbKeys uint64) {
-		keys := genAscendingKeys(nbKeys)
+		keys := genDescendingKeys(nbKeys)
 		run("extra_jeu_nb_cles_"+strconv.FormatUint(nbKeys, 10), keys)
 	}
 
@@ -305,16 +313,39 @@ func BenchmarkConstruction(b *testing.B) {
 
 func BenchmarkUnion(b *testing.B) {
 	run := func(name string, keysGroups [][]*lib.KeyInt) {
-		heaps := make([]*lib.MinHeapBinomial, len(keysGroups))
+		binoHeaps := make([]*lib.MinHeapBinomial, len(keysGroups))
+		treeHeaps := make([]*lib.MinHeapTree, len(keysGroups))
+		arrayHeaps := make([]*lib.MinHeapArray, len(keysGroups))
+
 		b.Run("heapBinomial/"+name, func(b *testing.B) {
 			for i, keys := range keysGroups {
-				heaps[i] = lib.NewMinHeapBinomial()
-				heaps[i].Construction(keys)
+				binoHeaps[i] = lib.NewMinHeapBinomial()
+				binoHeaps[i].Construction(keys)
 			}
 			for n := 0; n < b.N; n++ {
-				binoHeap := lib.NewMinHeapBinomial()
-				binoHeap.Union(heaps[0])
-				binoHeap.Union(heaps[1])
+				heap := lib.NewMinHeapBinomial()
+				heap.Union(binoHeaps[0])
+				heap.Union(binoHeaps[1])
+			}
+		})
+
+		b.Run("heapTree/"+name, func(b *testing.B) {
+			for i, keys := range keysGroups {
+				treeHeaps[i] = lib.NewMinHeapTree()
+				treeHeaps[i].Construction(keys)
+			}
+			for n := 0; n < b.N; n++ {
+				_ = lib.HeapTreeUnion(treeHeaps[0], treeHeaps[1])
+			}
+		})
+
+		b.Run("heapArray/"+name, func(b *testing.B) {
+			for i, keys := range keysGroups {
+				arrayHeaps[i] = lib.NewMinHeapArray()
+				arrayHeaps[i].Construction(keys)
+			}
+			for n := 0; n < b.N; n++ {
+				_ = lib.HeapArrayUnion(arrayHeaps[0], arrayHeaps[1])
 			}
 		})
 	}
@@ -335,7 +366,7 @@ func BenchmarkUnion(b *testing.B) {
 	run_extra := func(nbKeys uint64) {
 		keysGroups := make([][]*lib.KeyInt, 0, 2)
 		for j := 0; j < 2; j++ {
-			keys := genAscendingKeys(nbKeys)
+			keys := genDescendingKeys(nbKeys)
 			keysGroups = append(keysGroups, keys)
 		}
 		run("cles_"+strconv.FormatUint(nbKeys, 10), keysGroups)

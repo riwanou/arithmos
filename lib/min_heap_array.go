@@ -1,7 +1,7 @@
 package lib
 
 type MinHeapArray struct {
-	array []KeyInt
+	array []*KeyInt
 }
 
 /*
@@ -42,7 +42,7 @@ func (heap *MinHeapArray) hasRightChild(i int) bool {
 /*
 Returns KeyInt from an index.
 */
-func (heap *MinHeapArray) key(i int) KeyInt {
+func (heap *MinHeapArray) key(i int) *KeyInt {
 	if heap.isEmpty() {
 		panic("Error: Unable to get root key because heap is empty!")
 	}
@@ -77,7 +77,7 @@ func (heap *MinHeapArray) right(i int) int {
 
 func NewMinHeapArray() *MinHeapArray {
 	heap := &MinHeapArray{}
-	heap.array = make([]KeyInt, 0)
+	heap.array = make([]*KeyInt, 0)
 	return heap
 }
 
@@ -101,16 +101,16 @@ func (heap *MinHeapArray) SupprMin() *KeyInt {
 
 	keyIndex := heap.siftDown(0)
 	if keyIndex == -1 {
-		return &minKey
+		return minKey
 	}
 
 	return nil
 }
 
 func (heap *MinHeapArray) siftDown(keyIndex int) int {
-	var key KeyInt
+	var key *KeyInt
 	var leftOrRightKeyIndex int
-	var leftOrRightKey KeyInt
+	var leftOrRightKey *KeyInt
 
 	if heap.isEmpty() {
 		return -1
@@ -127,14 +127,14 @@ func (heap *MinHeapArray) siftDown(keyIndex int) int {
 			rightKeyIndex := heap.right(keyIndex)
 			rightKey := heap.key(rightKeyIndex)
 
-			if rightKey.Inf(&leftOrRightKey) {
+			if rightKey.Inf(leftOrRightKey) {
 				leftOrRightKeyIndex = rightKeyIndex
 				leftOrRightKey = rightKey
 			}
 		}
 
 		// Compare the smaller of the two children with the parent
-		if leftOrRightKey.Inf(&key) {
+		if leftOrRightKey.Inf(key) {
 			heap.array[keyIndex], heap.array[leftOrRightKeyIndex] = leftOrRightKey, key
 
 			// println("after sift down=" + heap.String())
@@ -156,7 +156,7 @@ Add a new element to the end of an array;
     If they are in wrong order, swap them.
 */
 func (heap *MinHeapArray) Ajout(key *KeyInt) {
-	heap.array = append(heap.array, *key)
+	heap.array = append(heap.array, key)
 	heap.siftUp(len(heap.array) - 1)
 }
 
@@ -170,7 +170,7 @@ func (heap *MinHeapArray) siftUp(keyIndex int) {
 	parentKey := heap.key(parentKeyIndex)
 
 	// Check if property is broken
-	if key.Inf(&parentKey) {
+	if key.Inf(parentKey) {
 		// Swap key and key's parent
 		heap.array[keyIndex], heap.array[parentKeyIndex] = heap.key(parentKeyIndex), heap.key(keyIndex)
 
@@ -187,13 +187,27 @@ func (heap *MinHeapArray) AjoutIteratif(keys []*KeyInt) {
 func (heap *MinHeapArray) Construction(keys []*KeyInt) {
 	// Add every key to array
 	for _, key := range keys {
-		heap.array = append(heap.array, *key)
+		heap.array = append(heap.array, key)
 	}
 
 	// Sift down every tree
 	for i := len(heap.array) / 2; i >= 0; i-- {
 		heap.siftDown(i)
 	}
+}
+
+/**
+ * Union
+ */
+
+func HeapArrayUnion(lhs *MinHeapArray, rhs *MinHeapArray) *MinHeapArray {
+	keys := lhs.array
+	keys = append(keys, rhs.array...)
+
+	heap := NewMinHeapArray()
+	heap.Construction(keys)
+
+	return heap
 }
 
 func (heap *MinHeapArray) String() string {
