@@ -82,29 +82,37 @@ func getShakespeareUniqueWordsFiles() [][]string {
 	return words
 }
 
-func getShakespeareUniqueWords() []string {
-	words := make([]string, 0)
-	wordsFiles := getShakespeareUniqueWordsFiles()
-
-	for _, wordsFile := range wordsFiles {
-		words = append(words, wordsFile...)
-	}
-
-	return words
-}
-
 /**
  * Tests
  */
 
 func TestShakespeareUniqueWords(t *testing.T) {
-	words := getShakespeareUniqueWords()
+	wordSet := lib.NewSearchTree()
+	words := make([]string, 0)
+	totalWords := 0
+
+	getShakespeareWords(func(word string, _ string) {
+		hash := lib.MD5([]byte(word))
+		key := lib.NewKeyIntFromBytes(hash)
+		totalWords++
+
+		// not already here
+		if wordSet.Get(key) == nil {
+			wordSet.Insert(key)
+			words = append(words, word)
+		}
+	})
+
 	assert.Equal(t, 23086, len(words))
+	assert.Equal(t, 905534, totalWords)
+
+	// get max level of the tree
+	assert.Equal(t, 31, wordSet.MaxLevel())
 }
 
 func TestShakespeareUniqueCollisionWords(t *testing.T) {
-	words := make([]string, 0)
 	wordSet := lib.NewSearchTree()
+	keyWordsMap := make(map[string]string)
 	collisionWords := make([]string, 0)
 
 	getShakespeareWords(func(word string, _ string) {
@@ -114,11 +122,18 @@ func TestShakespeareUniqueCollisionWords(t *testing.T) {
 		// not already here
 		if wordSet.Get(key) == nil {
 			wordSet.Insert(key)
-			words = append(words, word)
+			keyWordsMap[key.String()] = word
 		} else {
 			// collision on the key, check if the words already exist
-			if !slices.Contains(words, word) {
-				collisionWords = append(collisionWords, word)
+			existingWord := keyWordsMap[key.String()]
+			// different words give the same key -> collision
+			if word != existingWord {
+				if !slices.Contains(collisionWords, word) {
+					collisionWords = append(collisionWords, word)
+				}
+				if !slices.Contains(collisionWords, existingWord) {
+					collisionWords = append(collisionWords, existingWord)
+				}
 			}
 		}
 	})

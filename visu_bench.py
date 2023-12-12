@@ -96,43 +96,49 @@ gen_plot(df,
          'plots/ajout_array')
 
 # # Heaps Construction
-# gen_plot(df, 
-#          ['Construction/heapBinomial', 'Construction/heapTree', 'Construction/heapArray'], 
-#          ['min heap binomial', 'min heap tree', 'min heap array'], 
-#          'plots/construction')
+gen_plot(df, 
+         ['Construction/heapBinomial', 'Construction/heapTree', 'Construction/heapArray'], 
+         ['min heap binomial', 'min heap tree', 'min heap array'], 
+         'plots/construction')
 
-# # Heaps Union
-# gen_plot(df, 
-#          ['Union/heapBinomial', 'Union/heapTree', 'Union/heapArray'], 
-#          ['min heap binomial', 'min heap tree', 'min heap array'], 
-#          'plots/heap_union', avg=False)
+# Heaps Union
+gen_plot(df, 
+         ['Union/heapBinomial', 'Union/heapTree', 'Union/heapArray'], 
+         ['min heap binomial', 'min heap tree', 'min heap array'], 
+         'plots/heap_union', avg=False)
 
-# # Shakespeare
+# Heap Binomial Union
+gen_plot(df, 
+         ['Union/heapBinomial'], 
+         ['min heap binomial'], 
+         'plots/heap_binomial_union', avg=False)
 
-# # Ajout
-# gen_bar_plot(df, 
-#          ['AjoutWords/heapBinomial', 'AjoutWords/heapTree', 'AjoutWords/heapArray'], 
-#          ['min heap binomial', 'min heap tree', 'min heap array'], 
-#          'plots/words_ajout', avg=False)
+# Shakespeare
 
-# # Construction
-# gen_bar_plot(df, 
-#          ['ConstructionWords/heapBinomial', 'ConstructionWords/heapTree', 
-#              'ConstructionWords/heapArray'], 
-#          ['min heap binomial', 'min heap tree', 'min heap array'], 
-#          'plots/words_construction', avg=False)
+# Ajout
+gen_bar_plot(df, 
+         ['AjoutWords/heapBinomial', 'AjoutWords/heapTree', 'AjoutWords/heapArray'], 
+         ['min heap binomial', 'min heap tree', 'min heap array'], 
+         'plots/words_ajout', avg=False)
 
-# # SupprMin
-# gen_bar_plot(df, 
-#          ['SupprMinWords/heapBinomial', 'SupprMinWords/heapTree', 
-#              'SupprMinWords/heapArray'], 
-#          ['min heap binomial', 'min heap tree', 'min heap array'], 
-#          'plots/words_supprmin', avg=False)
+# Construction
+gen_bar_plot(df, 
+         ['ConstructionWords/heapBinomial', 'ConstructionWords/heapTree', 
+             'ConstructionWords/heapArray'], 
+         ['min heap binomial', 'min heap tree', 'min heap array'], 
+         'plots/words_construction', avg=False)
 
-# # SupprMin
-# gen_bar_plot(df, 
-#          ['UnionWords/heapBinomial', 'UnionWords/heapTree', 
-#              'UnionWords/heapArray'], 
-#          ['min heap binomial', 'min heap tree', 'min heap array'], 
-#          'plots/words_union', avg=False)
+# SupprMin
+gen_bar_plot(df, 
+         ['SupprMinWords/heapBinomial', 'SupprMinWords/heapTree', 
+             'SupprMinWords/heapArray'], 
+         ['min heap binomial', 'min heap tree', 'min heap array'], 
+         'plots/words_supprmin', avg=False)
+
+# SupprMin
+gen_bar_plot(df, 
+         ['UnionWords/heapBinomial', 'UnionWords/heapTree', 
+             'UnionWords/heapArray'], 
+         ['min heap binomial', 'min heap tree', 'min heap array'], 
+         'plots/words_union', avg=False)
 
