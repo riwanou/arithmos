@@ -227,33 +227,45 @@ func BenchmarkUnionWords(b *testing.B) {
 	name := "cles_" + strconv.Itoa(size)
 
 	b.Run("heapBinomial/"+name, func(b *testing.B) {
+		heaps := make([]*lib.MinHeapBinomial, 0)
+		for _, keysFile := range keysFiles {
+			heap := lib.NewMinHeapBinomial()
+			heap.Construction(keysFile)
+			heaps = append(heaps, heap)
+		}
 		for n := 0; n < b.N; n++ {
 			binoHeap := lib.NewMinHeapBinomial()
-			for _, keysFile := range keysFiles {
-				heap := lib.NewMinHeapBinomial()
-				heap.Construction(keysFile)
+			for _, heap := range heaps {
 				binoHeap.Union(heap)
 			}
 		}
 	})
 
 	b.Run("heapTree/"+name, func(b *testing.B) {
+		heaps := make([]*lib.MinHeapTree, 0)
+		for _, keysFile := range keysFiles {
+			heap := lib.NewMinHeapTree()
+			heap.Construction(keysFile)
+			heaps = append(heaps, heap)
+		}
 		for n := 0; n < b.N; n++ {
 			treeHeap := lib.NewMinHeapTree()
-			for _, keysFile := range keysFiles {
-				heap := lib.NewMinHeapTree()
-				heap.Construction(keysFile)
+			for _, heap := range heaps {
 				treeHeap = lib.HeapTreeUnion(treeHeap, heap)
 			}
 		}
 	})
 
 	b.Run("heapArray/"+name, func(b *testing.B) {
+		heaps := make([]*lib.MinHeapArray, 0)
+		for _, keysFile := range keysFiles {
+			heap := lib.NewMinHeapArray()
+			heap.Construction(keysFile)
+			heaps = append(heaps, heap)
+		}
 		for n := 0; n < b.N; n++ {
 			arrayHeap := lib.NewMinHeapArray()
-			for _, keysFile := range keysFiles {
-				heap := lib.NewMinHeapArray()
-				heap.Construction(keysFile)
+			for _, heap := range heaps {
 				arrayHeap = lib.HeapArrayUnion(arrayHeap, heap)
 			}
 		}
