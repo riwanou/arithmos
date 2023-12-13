@@ -84,10 +84,10 @@ df = pd.read_table("bench_output", header=None,
                    names=["Name", "Iteration", "Time"])
 
 # Heaps ajout tree
-# gen_plot(df, 
-#          ['AjoutIteratif/heapTree', 'Construction/heapTree'], 
-#          ['ajout min heap tree', 'construction min heap tree'], 
-#          'plots/ajout_tree')
+gen_plot(df, 
+         ['AjoutIteratif/heapTree', 'Construction/heapTree'], 
+         ['ajout min heap tree', 'construction min heap tree'], 
+         'plots/ajout_tree')
 
 # # Heaps ajout array
 gen_plot(df, 
