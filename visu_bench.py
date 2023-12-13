@@ -44,7 +44,7 @@ def avg_keys_bench(df, name):
 
     return avg_data
 
-def get_dataframes(df, name_patterns, col_names, filename, avg=True):
+def get_dataframes(df, name_patterns, col_names, avg=True):
     data_frames = []
     for i in range(0, len(name_patterns)):
         extracted_df = df[df['Name'].str.contains(name_patterns[i])]
@@ -58,7 +58,7 @@ def get_dataframes(df, name_patterns, col_names, filename, avg=True):
     return data_frames
 
 def gen_plot(df, name_patterns, col_names, filename, avg=True):
-    data_frames = get_dataframes(df, name_patterns, col_names, filename, avg)
+    data_frames = get_dataframes(df, name_patterns, col_names, avg)
     if len(data_frames) == 0:
         return
 
@@ -69,10 +69,12 @@ def gen_plot(df, name_patterns, col_names, filename, avg=True):
     plt.savefig(filename, dpi=300) 
 
 def gen_bar_plot(df, name_patterns, col_names, filename, avg=True):
-    data_frames = get_dataframes(df, name_patterns, col_names, filename, avg)
+    data_frames = get_dataframes(df, name_patterns, col_names, avg)
+    bar_plot(data_frames, filename)
+
+def bar_plot(data_frames, filename):
     if len(data_frames) == 0:
         return
-
     plt.clf()
     final_df = pd.concat(data_frames)
     ax = sns.barplot(x="Value", y="Time", hue='Name', data=final_df, gap=0.05)
@@ -122,20 +124,25 @@ gen_bar_plot(df,
          'plots/words_ajout', avg=False)
 
 # Construction
-gen_bar_plot(df, 
+cons_df = get_dataframes(df, 
          ['ConstructionWords/heapBinomial', 'ConstructionWords/heapTree', 
              'ConstructionWords/heapArray'], 
          ['min heap binomial', 'min heap tree', 'min heap array'], 
-         'plots/words_construction', avg=False)
+          avg=False)
+bar_plot(cons_df, 'plots/words_construction')
 
 # SupprMin
-gen_bar_plot(df, 
+suppr_df = get_dataframes(df, 
          ['SupprMinWords/heapBinomial', 'SupprMinWords/heapTree', 
              'SupprMinWords/heapArray'], 
-         ['min heap binomial', 'min heap tree', 'min heap array'], 
-         'plots/words_supprmin', avg=False)
+         ['min heap binomial', 'min heap tree', 'min heap array'], avg=False)
 
-# SupprMin
+for i in range(0, len(cons_df)):
+    suppr_df[i]['Time'] -= cons_df[i]['Time']
+
+bar_plot(suppr_df, 'plots/words_supprmin')
+
+# Union 
 gen_bar_plot(df, 
          ['UnionWords/heapBinomial', 'UnionWords/heapTree', 
              'UnionWords/heapArray'], 
