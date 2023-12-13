@@ -65,21 +65,13 @@ func (tree *SearchTree) Get(key *KeyInt) *KeyInt {
 	return tree.getNode(tree.root, key)
 }
 
-func (tree *SearchTree) nodeMaxLevel(node *SearchTreeNode, parentLevel int) int {
-	maxLevel := parentLevel
-
-	if !node.left.isNil() {
-		maxLevel = tree.nodeMaxLevel(node.left, parentLevel+1)
+func (tree *SearchTree) nodeMaxLevel(node *SearchTreeNode) int {
+	if node.isNil() {
+		return 0
 	}
-
-	if !node.right.isNil() {
-		level := tree.nodeMaxLevel(node.right, parentLevel+1)
-		maxLevel = max(maxLevel, level)
-	}
-
-	return maxLevel
+	return max(tree.nodeMaxLevel(node.left), tree.nodeMaxLevel(node.right)) + 1
 }
 
 func (tree *SearchTree) MaxLevel() int {
-	return tree.nodeMaxLevel(tree.root, 0)
+	return tree.nodeMaxLevel(tree.root)
 }

@@ -107,7 +107,7 @@ func TestShakespeareUniqueWords(t *testing.T) {
 	assert.Equal(t, 905534, totalWords)
 
 	// get max level of the tree
-	assert.Equal(t, 31, wordSet.MaxLevel())
+	assert.Equal(t, 32, wordSet.MaxLevel())
 }
 
 func TestShakespeareUniqueCollisionWords(t *testing.T) {
