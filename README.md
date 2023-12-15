@@ -1,5 +1,8 @@
 # Advanced Algorithms Project
 
+In data, add `cles_alea` and `Shakespeare`. \
+The project with everything is available on github here: https://github.com/riwanou/arithmos.
+
 ## Run Bench and Plots
 
 ```bash
